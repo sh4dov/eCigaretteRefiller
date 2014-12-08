@@ -1,0 +1,152 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    tools:context="com.sh4dov.ecigaretterefiller.OverviewFragment">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:id="@+id/linearLayout">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:text="Average"
+            android:id="@+id/textView2"
+            android:layout_alignParentTop="true"
+            android:layout_toRightOf="@+id/section_label"
+            android:layout_alignParentRight="true"
+            android:gravity="center_horizontal" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:text="2.2"
+            android:id="@+id/average"
+            android:gravity="center_horizontal"
+            android:layout_below="@+id/textView2"
+            android:layout_alignParentLeft="true"
+            android:layout_alignRight="@+id/textView2"
+     />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:text="All ml"
+            android:id="@+id/textView8"
+            android:gravity="center_horizontal"
+            android:layout_below="@+id/all_size"
+            android:layout_alignParentRight="true" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:text="2.2"
+            android:id="@+id/all_size"
+            android:gravity="center_horizontal"
+            android:layout_below="@+id/month_average"
+            android:layout_alignParentRight="true" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:text="Last month average"
+            android:id="@+id/textView3"
+            android:layout_below="@+id/average"
+            android:layout_alignParentLeft="true"
+            android:gravity="center_horizontal"
+            android:layout_alignParentRight="true"
+      />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:text="2.2"
+            android:id="@+id/month_average"
+            android:layout_below="@+id/textView3"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentRight="true"
+            android:gravity="center_horizontal" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:text="Last month ml"
+            android:id="@+id/textView9"
+            android:layout_below="@+id/all_size"
+            android:layout_alignParentLeft="true"
+            android:layout_alignRight="@+id/all_size"
+            android:gravity="center_horizontal" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:text="2.2"
+            android:id="@+id/last_month_size"
+            android:layout_below="@+id/textView9"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentRight="true"
+            android:gravity="center_horizontal" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:text="Current average"
+            android:id="@+id/textView5"
+
+            android:gravity="center_horizontal"
+            android:layout_below="@+id/current_average"
+            android:layout_alignParentRight="true" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:text="2.2"
+            android:id="@+id/current_average"
+
+            android:gravity="center_horizontal"
+            android:layout_below="@+id/textView8"
+            android:layout_alignParentRight="true" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:text="Current ml"
+            android:id="@+id/textView10"
+            android:layout_below="@+id/last_month_size"
+            android:layout_alignParentLeft="true"
+            android:layout_alignRight="@+id/last_month_size"
+            android:gravity="center_horizontal" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:text="2.2"
+            android:id="@+id/current_size"
+            android:layout_below="@+id/textView10"
+            android:layout_alignParentLeft="true"
+            android:layout_alignRight="@+id/textView10"
+            android:gravity="center_horizontal" />
+
+    </LinearLayout>
+
+</RelativeLayout>
