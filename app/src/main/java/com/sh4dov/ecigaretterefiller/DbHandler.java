@@ -48,7 +48,7 @@ public class DbHandler extends SQLiteOpenHelper {
     public ArrayList<Refill> GetRefills(){
         SQLiteDatabase db = this.getReadableDatabase();
 
-        Cursor c = db.rawQuery("SELECT * FROM Refills WHERE NOT IsDeleted", null);
+        Cursor c = db.rawQuery("SELECT * FROM Refills WHERE NOT IsDeleted ORDER BY Date DESC", null);
         ArrayList<Refill> result = new ArrayList<Refill>();
 
         if(!c.moveToFirst()){
@@ -91,6 +91,7 @@ public class DbHandler extends SQLiteOpenHelper {
 
         Refill refill = getRefill(c);
         c.close();
+
         return refill;
     }
 }

@@ -6,7 +6,7 @@
 
     <ListView android:id="@android:id/list" android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:listitem="@layout/refill_item_view" />
+        tools:listitem="@layout/fragment_refill_item" />
 
     <TextView android:id="@android:id/empty" android:layout_width="match_parent"
         android:layout_height="match_parent" android:gravity="center" />
