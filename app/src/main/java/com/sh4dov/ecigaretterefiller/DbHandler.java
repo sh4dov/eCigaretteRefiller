@@ -94,4 +94,12 @@ public class DbHandler extends SQLiteOpenHelper {
 
         return refill;
     }
+
+    public void clear() {
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        db.execSQL("DELETE FROM Refills");
+
+        db.close();
+    }
 }

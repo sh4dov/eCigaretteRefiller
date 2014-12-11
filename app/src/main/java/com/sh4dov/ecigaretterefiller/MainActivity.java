@@ -1,11 +1,16 @@
 package com.sh4dov.ecigaretterefiller;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Locale;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.Fragment;
 import android.app.FragmentManager;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.os.Environment;
 import android.support.v13.app.FragmentPagerAdapter;
 import android.os.Bundle;
 import android.support.v13.app.FragmentStatePagerAdapter;
@@ -33,11 +38,42 @@ implements NewRefillFragment.RefillRepository {
     ViewPager mViewPager;
 
     DbHandler db;
+    FileDialog fileDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        final Context context = this;
+        fileDialog = new FileDialog(this, new File(".."));
+        fileDialog.setFileEndsWith(".csv");
+        fileDialog.addFileListener(new FileDialog.FileSelectedListener(){
+            public void fileSelected(File file){
+                DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener(){
+                    @Override
+                public void onClick(DialogInterface dialogInterface,  int which){
+                        switch (which){
+                            case DialogInterface.BUTTON_POSITIVE:
+                                db.clear();
+                                break;
+
+                            case DialogInterface.BUTTON_NEGATIVE:
+
+                                break;
+                        }
+
+                        mSectionsPagerAdapter.notifyDataSetChanged();
+                    }
+                };
+
+                AlertDialog.Builder builder = new AlertDialog.Builder(context);
+                builder.setMessage("Delete data from database?")
+                        .setPositiveButton("Yes", dialogClickListener)
+                        .setNegativeButton("No", dialogClickListener)
+                        .show();
+            }
+        });
 
         db = new DbHandler(this);
         AverageProvider averageProvider = new AverageProvider(db);
@@ -49,7 +85,7 @@ implements NewRefillFragment.RefillRepository {
         // Set up the ViewPager with the sections adapter.
         mViewPager = (ViewPager) findViewById(R.id.pager);
         mViewPager.setAdapter(mSectionsPagerAdapter);
-        mViewPager.setCurrentItem(FragmentFactory.RefillList);
+        mViewPager.setCurrentItem(FragmentFactory.NewRefill);
     }
 
 
@@ -67,12 +103,20 @@ implements NewRefillFragment.RefillRepository {
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
+        switch(id){
+            case R.id.action_settings:
             return true;
+
+            case R.id.action_import_csv:
+                importFromCsv();
+                return true;
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private void importFromCsv(){
+        fileDialog.showDialog();
     }
 
     @Override
