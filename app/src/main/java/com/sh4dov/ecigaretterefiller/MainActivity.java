@@ -20,7 +20,7 @@ import android.view.MenuItem;
 
 
 public class MainActivity extends Activity
-implements NewRefillFragment.RefillRepository {
+implements NewRefillFragment.RefillRepository, ItemFragment.ItemOperations {
 
     /**
      * The {@link android.support.v4.view.PagerAdapter} that will provide
@@ -124,6 +124,11 @@ implements NewRefillFragment.RefillRepository {
         db.Add(refill);
         mSectionsPagerAdapter.notifyDataSetChanged();
         mViewPager.setCurrentItem(FragmentFactory.Overview);
+    }
+
+    @Override
+    public void EditRefill(Refill refill) {
+
     }
 
 
