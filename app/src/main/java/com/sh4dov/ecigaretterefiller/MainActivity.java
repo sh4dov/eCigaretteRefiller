@@ -181,20 +181,6 @@ implements NewRefillFragment.RefillRepository, ItemFragment.ItemOperations {
         }
 
         @Override
-        public CharSequence getPageTitle(int position) {
-            Locale l = Locale.getDefault();
-            switch (position) {
-                case 0:
-                    return getString(R.string.title_section1).toUpperCase(l);
-                case 1:
-                    return getString(R.string.title_section2).toUpperCase(l);
-                case 2:
-                    return getString(R.string.title_section3).toUpperCase(l);
-            }
-            return null;
-        }
-
-        @Override
         public int getItemPosition(Object object) {
             // Causes adapter to reload all Fragments when
             // notifyDataSetChanged is called
@@ -220,9 +206,6 @@ implements NewRefillFragment.RefillRepository, ItemFragment.ItemOperations {
             switch(sectionNumber){
                 case RefillList:
                     fragment = new ItemFragment();
-                    // TODO: Fill data etc.
-                    ArrayList<Refill> refills = db.GetRefills();
-                    ((ItemFragment)fragment).setItems(refills);
                     fragment.setArguments(args);
                     return fragment;
 

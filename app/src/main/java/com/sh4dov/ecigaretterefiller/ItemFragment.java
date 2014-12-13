@@ -35,10 +35,6 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
 
     private ArrayList<Refill> refills;
 
-    public void setItems(ArrayList<Refill> refills){
-        this.refills = refills;
-    }
-
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
      * fragment (e.g. upon screen orientation changes).
@@ -49,11 +45,6 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        if (getArguments() != null) {
-        }
-
-        mAdapter = new RefillsAdapter(getActivity(), refills);
     }
 
     @Override
@@ -61,9 +52,13 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_item, container, false);
 
+        Activity activity = getActivity();
+        DbHandler db = new DbHandler(activity);
+        refills = db.GetRefills();
+        mAdapter = new RefillsAdapter(activity, refills);
         // Set the adapter
         mListView = (AbsListView) view.findViewById(android.R.id.list);
-        ((AdapterView<ListAdapter>) mListView).setAdapter(mAdapter);
+        mListView.setAdapter(mAdapter);
 
         // Set OnItemClickListener so we can be notified on item clicks
         mListView.setOnItemClickListener(this);

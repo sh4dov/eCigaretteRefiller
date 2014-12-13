@@ -67,6 +67,7 @@ public class DbHandler extends SQLiteOpenHelper {
         }
         while(c.moveToNext());
         c.close();
+        db.close();
 
         return result;
     }
@@ -122,6 +123,7 @@ public class DbHandler extends SQLiteOpenHelper {
 
         Refill refill = getRefill(c);
         c.close();
+        db.close();
 
         return refill;
     }
