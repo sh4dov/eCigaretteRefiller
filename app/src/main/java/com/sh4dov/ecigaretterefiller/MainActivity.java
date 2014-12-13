@@ -116,6 +116,10 @@ implements NewRefillFragment.RefillRepository, ItemFragment.ItemOperations {
             case R.id.action_import_csv:
                 importFromCsv();
                 return true;
+
+            case R.id.action_exit:
+                finish();
+                return true;
         }
 
         return super.onOptionsItemSelected(item);
