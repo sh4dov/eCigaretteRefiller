@@ -75,10 +75,10 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
     public void onAttach(Activity activity) {
         super.onAttach(activity);
         try {
-            //mListener = (OnFragmentInteractionListener) activity;
+            mListener = (ItemOperations) activity;
         } catch (ClassCastException e) {
             throw new ClassCastException(activity.toString()
-                    + " must implement OnFragmentInteractionListener");
+                    + " must implement ItemOperations");
         }
     }
 
@@ -111,10 +111,7 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
         }
     }
 
-
     public interface ItemOperations {
-        // TODO: Update argument type and name
         public void EditRefill(Refill refill);
     }
-
 }

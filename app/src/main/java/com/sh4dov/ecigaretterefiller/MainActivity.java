@@ -10,6 +10,7 @@ import android.app.Fragment;
 import android.app.FragmentManager;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Environment;
 import android.support.v13.app.FragmentPagerAdapter;
 import android.os.Bundle;
@@ -39,6 +40,9 @@ implements NewRefillFragment.RefillRepository, ItemFragment.ItemOperations {
 
     DbHandler db;
     FileDialog fileDialog;
+    private static class RequestCodes{
+        public static final int EDIT = 1;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,6 +54,7 @@ implements NewRefillFragment.RefillRepository, ItemFragment.ItemOperations {
         fileDialog.setFileEndsWith(".csv");
         fileDialog.addFileListener(new FileDialog.FileSelectedListener(){
             public void fileSelected(File file){
+                final File csvFile = file;
                 DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener(){
                     @Override
                 public void onClick(DialogInterface dialogInterface,  int which){
@@ -63,6 +68,7 @@ implements NewRefillFragment.RefillRepository, ItemFragment.ItemOperations {
                                 break;
                         }
 
+                        db.importFromCsv(csvFile);
                         mSectionsPagerAdapter.notifyDataSetChanged();
                     }
                 };
@@ -128,9 +134,20 @@ implements NewRefillFragment.RefillRepository, ItemFragment.ItemOperations {
 
     @Override
     public void EditRefill(Refill refill) {
-
+        Intent intent = new Intent(this, EditRefillActivity.class);
+        intent.putExtra(EditRefillActivity.EditRefillKey, refill);
+        startActivityForResult(intent, RequestCodes.EDIT);
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data){
+        switch(requestCode)
+        {
+            case RequestCodes.EDIT:
+                mSectionsPagerAdapter.notifyDataSetChanged();
+                break;
+        }
+    }
 
     /**
      * A {@link FragmentPagerAdapter} that returns a fragment corresponding to

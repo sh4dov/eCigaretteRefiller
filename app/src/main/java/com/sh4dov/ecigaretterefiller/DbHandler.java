@@ -6,6 +6,11 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -79,6 +84,32 @@ public class DbHandler extends SQLiteOpenHelper {
         return r;
     }
 
+    public void importFromCsv(File file)  {
+        SQLiteDatabase db = this.getWritableDatabase();
+        try {
+            BufferedReader reader = new BufferedReader(new FileReader(file));
+            String line;
+
+            reader.readLine();
+            while ((line = reader.readLine()) != null) {
+                String[] values = line.split(";");
+
+                ContentValues cv = new ContentValues();
+                cv.put("Date", values[1]);
+                cv.put("Size", values[2]);
+                cv.put("Name", values[3]);
+                cv.put("IsDeleted", values[4]);
+
+
+                db.insert("Refills", null, cv);
+            }
+        }
+        catch(IOException e){
+            e.printStackTrace();
+        }
+        db.close();
+    }
+
     public Refill getLastRefill(){
         SQLiteDatabase db = this.getReadableDatabase();
 
@@ -100,6 +131,28 @@ public class DbHandler extends SQLiteOpenHelper {
 
         db.execSQL("DELETE FROM Refills");
 
+        db.close();
+    }
+
+    public void update(Refill refill) {
+        ContentValues values = new ContentValues();
+        values.put("Date", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(refill.date));
+        values.put("Size", refill.size);
+        values.put("Name", refill.name);
+
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        db.update("Refills", values, "Id = " + Integer.toString(refill.id), null);
+        db.close();
+    }
+
+    public void delete(int id) {
+        ContentValues values = new ContentValues();
+        values.put("IsDeleted", true);
+
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        db.update("Refills", values, "Id = " + Integer.toString(id), null);
         db.close();
     }
 }
