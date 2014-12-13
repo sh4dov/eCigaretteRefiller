@@ -67,14 +67,24 @@ public class AverageProvider {
         double result = 0;
         Date now = new Date();
         Date max = end != null && end.before(now) ? end : now, min = start;
+        long maxDiff = Long.MAX_VALUE, minDiff = Long.MAX_VALUE;
 
         for (int i = 0; i < refills.size(); i++) {
             Refill refill = refills.get(i);
-            if (start != null && end != null && (refill.date.before(start) || refill.date.after(end))) {
+            if (start != null && end != null && (refill.date.before(start) || refill.date.after(end) || refill.date.equals(end))) {
+                if((refill.date.after(end) || refill.date.equals(end)) && (maxDiff > (refill.date.getTime() - end.getTime()) )){
+                    maxDiff = refill.date.getTime() - end.getTime();
+                    max = refill.date;
+                }
                 continue;
             }
             result += refill.size;
-            if (min == null || refill.date.before(min)) {
+
+            if(start == null && (min == null || refill.date.before(min))){
+                min = refill.date;
+            }
+            else if (start != null && (refill.date.after(start) || refill.date.equals(start)) && minDiff > (refill.date.getTime() - start.getTime())) {
+                minDiff = refill.date.getTime() - start.getTime();
                 min = refill.date;
             }
         }

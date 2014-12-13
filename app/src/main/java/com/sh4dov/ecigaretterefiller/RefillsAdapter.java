@@ -30,7 +30,7 @@ public class RefillsAdapter extends ArrayAdapter<Refill> {
         TextView name = (TextView) convertView.findViewById(R.id.refill_name);
         name.setText(refill.name);
         TextView size = (TextView) convertView.findViewById(R.id.refill_size);
-        size.setText(new DecimalFormat("#.##").format(refill.size));
+        size.setText(new DecimalFormat("0.0").format(refill.size));
         TextView date = (TextView) convertView.findViewById(R.id.refill_date);
         date.setText(new SimpleDateFormat("yyyy-MM-dd HH:mm").format(refill.date));
 
