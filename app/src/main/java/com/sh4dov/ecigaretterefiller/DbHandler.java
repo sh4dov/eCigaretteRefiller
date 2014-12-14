@@ -21,7 +21,7 @@ import java.util.List;
 /**
  * Created by SYSTEM on 2014-12-06.
  */
-public class DbHandler extends SQLiteOpenHelper {
+public class DbHandler extends SQLiteOpenHelper implements RefillsRepository {
     public static final String DatabaseName = "ecigaretterefills.db";
 
     public DbHandler(Context context){
@@ -38,6 +38,7 @@ public class DbHandler extends SQLiteOpenHelper {
 
     }
 
+    @Override
     public void Add(Refill refill){
         ContentValues values = new ContentValues();
         values.put("Date", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(refill.date));
@@ -50,6 +51,7 @@ public class DbHandler extends SQLiteOpenHelper {
         db.close();
     }
 
+    @Override
     public ArrayList<Refill> GetRefills(){
         SQLiteDatabase db = this.getReadableDatabase();
 
@@ -85,6 +87,7 @@ public class DbHandler extends SQLiteOpenHelper {
         return r;
     }
 
+    @Override
     public void importFromCsv(File file)  {
         SQLiteDatabase db = this.getWritableDatabase();
         try {
@@ -111,6 +114,7 @@ public class DbHandler extends SQLiteOpenHelper {
         db.close();
     }
 
+    @Override
     public Refill getLastRefill(){
         SQLiteDatabase db = this.getReadableDatabase();
 
@@ -128,6 +132,7 @@ public class DbHandler extends SQLiteOpenHelper {
         return refill;
     }
 
+    @Override
     public void clear() {
         SQLiteDatabase db = this.getWritableDatabase();
 
@@ -136,6 +141,7 @@ public class DbHandler extends SQLiteOpenHelper {
         db.close();
     }
 
+    @Override
     public void update(Refill refill) {
         ContentValues values = new ContentValues();
         values.put("Date", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(refill.date));
@@ -148,6 +154,7 @@ public class DbHandler extends SQLiteOpenHelper {
         db.close();
     }
 
+    @Override
     public void delete(int id) {
         ContentValues values = new ContentValues();
         values.put("IsDeleted", true);

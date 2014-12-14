@@ -45,11 +45,11 @@ public class OverviewFragment extends Fragment {
             TextView currentAverageView = (TextView)getView().findViewById(R.id.current_average);
             currentAverageView.setText(new DecimalFormat("#.##").format(currentAverage));
             TextView allSizeView = (TextView)getView().findViewById(R.id.all_size);
-            allSizeView.setText(new DecimalFormat("#.##").format(allSize));
+            allSizeView.setText(new DecimalFormat("0.0").format(allSize));
             TextView monthSizeView = (TextView)getView().findViewById(R.id.last_month_size);
-            monthSizeView.setText(new DecimalFormat("#.##").format(monthSize));
+            monthSizeView.setText(new DecimalFormat("0.0").format(monthSize));
             TextView currentSizeView = (TextView)getView().findViewById(R.id.current_size);
-            currentSizeView.setText(new DecimalFormat("#.##").format(currentSize));
+            currentSizeView.setText(new DecimalFormat("0.0").format(currentSize));
         }
         super.onStart();
     }

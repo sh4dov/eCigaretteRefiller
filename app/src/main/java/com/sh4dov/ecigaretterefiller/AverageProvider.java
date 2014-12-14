@@ -9,9 +9,9 @@ import java.util.concurrent.TimeUnit;
  * Created by SYSTEM on 2014-12-06.
  */
 public class AverageProvider {
-    private DbHandler db;
+    private RefillsRepository db;
 
-    public AverageProvider(DbHandler db) {
+    public AverageProvider(RefillsRepository db) {
         this.db = db;
     }
 

@@ -1,8 +1,6 @@
 package com.sh4dov.ecigaretterefiller;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Locale;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -11,7 +9,6 @@ import android.app.FragmentManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.os.Environment;
 import android.support.v13.app.FragmentPagerAdapter;
 import android.os.Bundle;
 import android.support.v13.app.FragmentStatePagerAdapter;
@@ -38,7 +35,7 @@ implements NewRefillFragment.RefillRepository, ItemFragment.ItemOperations {
      */
     ViewPager mViewPager;
 
-    DbHandler db;
+    RefillsRepository db;
     FileDialog fileDialog;
     private static class RequestCodes{
         public static final int EDIT = 1;
@@ -159,9 +156,9 @@ implements NewRefillFragment.RefillRepository, ItemFragment.ItemOperations {
      */
     public class SectionsPagerAdapter extends FragmentStatePagerAdapter {
         private final FragmentFactory fragmentFactory;
-        private DbHandler db;
+        private RefillsRepository db;
 
-        public SectionsPagerAdapter(FragmentManager fm, FragmentFactory fragmentFactory, DbHandler db) {
+        public SectionsPagerAdapter(FragmentManager fm, FragmentFactory fragmentFactory, RefillsRepository db) {
             super(fm);
             this.fragmentFactory = fragmentFactory;
             this.db = db;
@@ -176,8 +173,7 @@ implements NewRefillFragment.RefillRepository, ItemFragment.ItemOperations {
 
         @Override
         public int getCount() {
-            // Show 3 total pages.
-            return 3;
+            return 4;
         }
 
         @Override
@@ -192,6 +188,7 @@ implements NewRefillFragment.RefillRepository, ItemFragment.ItemOperations {
         private static final int Overview = 0;
         private static final int NewRefill = 1;
         private static final int RefillList = 2;
+        private static final int MonthRefillsList = 3;
 
         private final AverageProvider averageProvider;
 
@@ -216,6 +213,11 @@ implements NewRefillFragment.RefillRepository, ItemFragment.ItemOperations {
                         args.putDouble(NewRefillFragment.SizeKey, refill.size);
                         args.putString(NewRefillFragment.NameKey, refill.name);
                     }
+                    fragment.setArguments(args);
+                    return fragment;
+
+                case MonthRefillsList:
+                    fragment = new MonthRefillsFragment();
                     fragment.setArguments(args);
                     return fragment;
 
