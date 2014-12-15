@@ -17,5 +17,9 @@
     </string-array>
 
     <string name="title_activity_edit_refill">Edit</string>
+    <string name="save">Save</string>
+    <string name="cancel">Cancel</string>
+    <string name="successfully_exported">Successfully exported</string>
+    <string name="cannot_export">Cannot export</string>
 
 </resources>

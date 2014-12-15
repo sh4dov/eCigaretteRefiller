@@ -56,7 +56,7 @@ public class MonthRefillsFragment extends Fragment implements AbsListView.OnItem
         View view = inflater.inflate(R.layout.fragment_monthrefills, container, false);
 
         Activity activity = getActivity();
-        MonthRefillsProvider provider = new MonthRefillsProvider(new DbHandler(activity));
+        MonthRefillsProvider provider = new MonthRefillsProvider(new DbHandler(activity, null));
         monthRefills = provider.Get();
         mAdapter = new MonthRefillsAdapter(activity, monthRefills);
 

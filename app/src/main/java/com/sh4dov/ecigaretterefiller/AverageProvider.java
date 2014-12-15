@@ -31,7 +31,7 @@ public class AverageProvider {
 
     public AverageData Get(){
         AverageData result = new AverageData();
-        ArrayList<Refill> refills =  db.GetRefills();
+        ArrayList<Refill> refills =  db.getRefills();
 
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(new Date());

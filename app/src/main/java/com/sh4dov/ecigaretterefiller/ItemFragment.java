@@ -49,8 +49,8 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
         View view = inflater.inflate(R.layout.fragment_item, container, false);
 
         Activity activity = getActivity();
-        RefillsRepository db = new DbHandler(activity);
-        refills = db.GetRefills();
+        RefillsRepository db = new DbHandler(activity, null);
+        refills = db.getRefills();
         mAdapter = new RefillsAdapter(activity, refills);
         // Set the adapter
         mListView = (AbsListView) view.findViewById(android.R.id.list);

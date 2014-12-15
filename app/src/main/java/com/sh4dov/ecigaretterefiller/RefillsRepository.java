@@ -9,7 +9,7 @@ import java.util.ArrayList;
 public interface RefillsRepository {
     void Add(Refill refill);
 
-    ArrayList<Refill> GetRefills();
+    ArrayList<Refill> getRefills();
 
     void importFromCsv(File file);
 
@@ -20,4 +20,6 @@ public interface RefillsRepository {
     void update(Refill refill);
 
     void delete(int id);
+
+    boolean exportToCsv(File file);
 }

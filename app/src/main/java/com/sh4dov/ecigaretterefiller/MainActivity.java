@@ -1,6 +1,11 @@
 package com.sh4dov.ecigaretterefiller;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -15,10 +20,11 @@ import android.support.v13.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 
 public class MainActivity extends Activity
-implements NewRefillFragment.RefillRepository, ItemFragment.ItemOperations {
+implements NewRefillFragment.RefillRepository, ItemFragment.ItemOperations, Notificator {
 
     /**
      * The {@link android.support.v4.view.PagerAdapter} that will provide
@@ -37,6 +43,12 @@ implements NewRefillFragment.RefillRepository, ItemFragment.ItemOperations {
 
     RefillsRepository db;
     FileDialog fileDialog;
+
+    @Override
+    public void ShowInfo(String message) {
+        Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+    }
+
     private static class RequestCodes{
         public static final int EDIT = 1;
     }
@@ -78,7 +90,7 @@ implements NewRefillFragment.RefillRepository, ItemFragment.ItemOperations {
             }
         });
 
-        db = new DbHandler(this);
+        db = new DbHandler(this, this);
         AverageProvider averageProvider = new AverageProvider(db);
         FragmentFactory fragmentFactory = new FragmentFactory(averageProvider);
         // Create the adapter that will return a fragment for each of the three
@@ -114,12 +126,34 @@ implements NewRefillFragment.RefillRepository, ItemFragment.ItemOperations {
                 importFromCsv();
                 return true;
 
+            case R.id.action_export_csv:
+                exportToCsv();
+                return true;
+
             case R.id.action_exit:
                 finish();
                 return true;
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private void exportToCsv() {
+        SaveFileDialog dialog = new SaveFileDialog();
+        dialog.addFileListener(new SaveFileDialog.FileListener() {
+            @Override
+            public void fileSelected(File file) {
+                if(db.exportToCsv(file)){
+                    Toast.makeText(MainActivity.this, R.string.successfully_exported, Toast.LENGTH_SHORT).show();
+                }
+                else{
+                    Toast.makeText(MainActivity.this, R.string.cannot_export, Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+        dialog.setFileName("ecigaretterefiller.csv");
+        dialog.show(getFragmentManager(), "SaveFileDialog");
+
     }
 
     private void importFromCsv(){

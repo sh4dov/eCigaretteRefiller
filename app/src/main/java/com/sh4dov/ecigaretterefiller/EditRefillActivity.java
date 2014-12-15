@@ -20,7 +20,7 @@ public class EditRefillActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_edit_refill);
-        final RefillsRepository db = new DbHandler(this);
+        final RefillsRepository db = new DbHandler(this, null);
 
         Intent intent = getIntent();
         editedRefill = (Refill)intent.getSerializableExtra(EditRefillKey);

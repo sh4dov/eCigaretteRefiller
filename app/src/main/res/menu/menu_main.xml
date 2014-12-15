@@ -4,4 +4,5 @@
     <item android:id="@+id/action_settings" android:title="@string/action_settings"
         android:orderInCategory="100" android:showAsAction="never" />
     <item android:id="@+id/action_import_csv" android:title="Import from csv"/>
+    <item android:id="@+id/action_export_csv" android:title="Export to csv"/>
 </menu>

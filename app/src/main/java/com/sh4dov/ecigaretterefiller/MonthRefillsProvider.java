@@ -20,7 +20,7 @@ public class MonthRefillsProvider {
         Date endDate = new Date();
         Date startDate = new Date();
 
-        for (Refill refill : repository.GetRefills()) {
+        for (Refill refill : repository.getRefills()) {
             if(!isMatch(refills, refill.date)){
                 if(refills != null){
                     refills.startDate = startDate;
