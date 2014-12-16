@@ -8,15 +8,12 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
 
 
 /**
@@ -92,8 +89,37 @@ public class DbHandler extends SQLiteOpenHelper implements RefillsRepository {
 
     private void showInfo(String message){
         if(notificator!= null){
-            notificator.ShowInfo(message);
+            notificator.showInfo(message);
         }
+    }
+
+    @Override
+    public String exportToString(){
+        StringBuffer buffer = new StringBuffer();
+        String newLine = "\r\n";
+        buffer.append("Id;Date;Size;Name;IsDeleted" + newLine);
+
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        Cursor c = db.rawQuery("SELECT * FROM Refills", null);
+        if(!c.moveToFirst()){
+            c.close();
+            db.close();
+            return buffer.toString();
+        }
+
+        do{
+            for (int i = 0; i < c.getColumnCount(); i++) {
+                buffer.append(c.getString(i));
+                buffer.append(";");
+            }
+            buffer.append(newLine);
+        }
+        while(c.moveToNext());
+        c.close();
+        db.close();
+
+        return buffer.toString();
     }
 
     @Override
@@ -111,31 +137,7 @@ public class DbHandler extends SQLiteOpenHelper implements RefillsRepository {
 
         try {
             FileOutputStream stream = new FileOutputStream(file, false);
-            StringBuffer buffer = new StringBuffer();
-            String newLine = "\r\n";
-            buffer.append("Id;Date;Size;Name;IsDeleted" + newLine);
-
-            SQLiteDatabase db = this.getReadableDatabase();
-
-            Cursor c = db.rawQuery("SELECT * FROM Refills", null);
-            if(!c.moveToFirst()){
-                c.close();
-                db.close();
-                stream.write(buffer.toString().getBytes());
-                stream.close();
-                return true;
-            }
-
-            do{
-                for (int i = 0; i < c.getColumnCount(); i++) {
-                    buffer.append(c.getString(i));
-                    buffer.append(";");
-                }
-                buffer.append(newLine);
-            }
-            while(c.moveToNext());
-            c.close();
-            db.close();
+            String buffer = exportToString();
             stream.write(buffer.toString().getBytes());
             stream.close();
         } catch (IOException e) {

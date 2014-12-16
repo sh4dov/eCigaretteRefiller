@@ -21,5 +21,7 @@ public interface RefillsRepository {
 
     void delete(int id);
 
+    String exportToString();
+
     boolean exportToCsv(File file);
 }

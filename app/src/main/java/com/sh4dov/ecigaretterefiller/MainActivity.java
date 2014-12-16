@@ -14,6 +14,7 @@ import android.app.FragmentManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentSender;
 import android.support.v13.app.FragmentPagerAdapter;
 import android.os.Bundle;
 import android.support.v13.app.FragmentStatePagerAdapter;
@@ -21,6 +22,13 @@ import android.support.v4.view.ViewPager;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
+
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GooglePlayServicesUtil;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.drive.Drive;
+import com.google.android.gms.drive.DriveId;
+import com.google.android.gms.drive.OpenFileActivityBuilder;
 
 
 public class MainActivity extends Activity
@@ -43,20 +51,25 @@ implements NewRefillFragment.RefillRepository, ItemFragment.ItemOperations, Noti
 
     RefillsRepository db;
     FileDialog fileDialog;
+    private GDriveController gdriveController;
 
     @Override
-    public void ShowInfo(String message) {
+    public void showInfo(String message) {
         Toast.makeText(this, message, Toast.LENGTH_LONG).show();
     }
 
     private static class RequestCodes{
         public static final int EDIT = 1;
+        public static final int RESOLVE_CONNECTION_REQUEST_CODE = 2;
+        public static final int REQUEST_CODE_CREATOR = 3;
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        gdriveController = new GDriveController(this, RequestCodes.RESOLVE_CONNECTION_REQUEST_CODE, this);
 
         final Context context = this;
         fileDialog = new FileDialog(this, new File(".."));
@@ -133,6 +146,10 @@ implements NewRefillFragment.RefillRepository, ItemFragment.ItemOperations, Noti
             case R.id.action_exit:
                 finish();
                 return true;
+
+            case R.id.action_export_gdrive:
+                gdriveController.writeFile(RequestCodes.REQUEST_CODE_CREATOR, db.exportToString());
+                return true;
         }
 
         return super.onOptionsItemSelected(item);
@@ -181,6 +198,17 @@ implements NewRefillFragment.RefillRepository, ItemFragment.ItemOperations, Noti
             case RequestCodes.EDIT:
                 mSectionsPagerAdapter.notifyDataSetChanged();
                 break;
+
+            case RequestCodes.RESOLVE_CONNECTION_REQUEST_CODE:
+                if(resultCode == RESULT_OK){
+                    gdriveController.connect();
+                }
+                break;
+
+            case RequestCodes.REQUEST_CODE_CREATOR:
+                if(resultCode == RESULT_OK){
+                    showInfo("Exported to GDrive");
+                }
         }
     }
 

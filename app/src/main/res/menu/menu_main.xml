@@ -2,7 +2,21 @@
     xmlns:tools="http://schemas.android.com/tools" tools:context=".MainActivity">
     <item android:id="@+id/action_exit" android:title="Exit"/>
     <item android:id="@+id/action_settings" android:title="@string/action_settings"
-        android:orderInCategory="100" android:showAsAction="never" />
-    <item android:id="@+id/action_import_csv" android:title="Import from csv"/>
-    <item android:id="@+id/action_export_csv" android:title="Export to csv"/>
+        android:orderInCategory="100" android:showAsAction="never" >
+        <menu>
+            <item android:title="@string/menu_import">
+                <menu>
+                    <item android:id="@+id/action_import_csv" android:title="@string/import_from_csv"/>
+                    <item android:id="@+id/action_import_gdrive" android:title="@string/import_from_gdrive"/>
+                </menu>
+            </item>
+
+            <item android:title="@string/menu_export">
+                <menu>
+                    <item android:id="@+id/action_export_csv" android:title="@string/export_to_csv"/>
+                    <item android:id="@+id/action_export_gdrive" android:title="@string/export_to_gdrive"/>
+                </menu>
+            </item>
+        </menu>
+    </item>
 </menu>
