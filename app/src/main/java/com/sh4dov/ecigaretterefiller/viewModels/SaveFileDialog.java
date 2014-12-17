@@ -1,12 +1,9 @@
-package com.sh4dov.ecigaretterefiller;
+package com.sh4dov.ecigaretterefiller.viewModels;
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.DialogFragment;
 import android.content.DialogInterface;
-import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.view.LayoutInflater;
@@ -17,6 +14,9 @@ import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
+
+import com.sh4dov.ecigaretterefiller.ListenerList;
+import com.sh4dov.ecigaretterefiller.R;
 
 import java.io.File;
 import java.util.ArrayList;

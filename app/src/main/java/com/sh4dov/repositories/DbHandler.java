@@ -1,10 +1,13 @@
-package com.sh4dov.ecigaretterefiller;
+package com.sh4dov.repositories;
 
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+
+import com.sh4dov.common.Notificator;
+import com.sh4dov.model.Refill;
 
 import java.io.BufferedReader;
 import java.io.File;

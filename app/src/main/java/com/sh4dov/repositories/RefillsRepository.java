@@ -1,4 +1,6 @@
-package com.sh4dov.ecigaretterefiller;
+package com.sh4dov.repositories;
+
+import com.sh4dov.model.Refill;
 
 import java.io.File;
 import java.util.ArrayList;

@@ -1,4 +1,4 @@
-package com.sh4dov.ecigaretterefiller;
+package com.sh4dov.ecigaretterefiller.viewModels;
 
 import android.app.Activity;
 import android.os.Bundle;
@@ -11,6 +11,12 @@ import android.widget.AdapterView;
 import android.widget.ListAdapter;
 import android.widget.TextView;
 
+import com.sh4dov.ecigaretterefiller.adapters.MonthRefillsAdapter;
+import com.sh4dov.ecigaretterefiller.business.logic.MonthRefillsProvider;
+import com.sh4dov.ecigaretterefiller.R;
+import com.sh4dov.model.MonthRefills;
+import com.sh4dov.repositories.DbHandler;
+
 import java.util.ArrayList;
 
 /**
@@ -19,7 +25,7 @@ import java.util.ArrayList;
  * Large screen devices (such as tablets) are supported by replacing the ListView
  * with a GridView.
  * <p/>
- * Activities containing this fragment MUST implement the {@link com.sh4dov.ecigaretterefiller.MonthRefillsFragment.ItemOperations}
+ * Activities containing this fragment MUST implement the {@link MonthRefillsFragment.ItemOperations}
  * interface.
  */
 public class MonthRefillsFragment extends Fragment implements AbsListView.OnItemClickListener {

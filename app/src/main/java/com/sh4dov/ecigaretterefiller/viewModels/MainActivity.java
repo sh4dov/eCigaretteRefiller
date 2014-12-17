@@ -1,11 +1,6 @@
-package com.sh4dov.ecigaretterefiller;
+package com.sh4dov.ecigaretterefiller.viewModels;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.util.ArrayList;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -14,7 +9,6 @@ import android.app.FragmentManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.IntentSender;
 import android.support.v13.app.FragmentPagerAdapter;
 import android.os.Bundle;
 import android.support.v13.app.FragmentStatePagerAdapter;
@@ -23,12 +17,14 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.GooglePlayServicesUtil;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.drive.Drive;
-import com.google.android.gms.drive.DriveId;
-import com.google.android.gms.drive.OpenFileActivityBuilder;
+import com.sh4dov.common.Notificator;
+import com.sh4dov.ecigaretterefiller.business.logic.AverageProvider;
+import com.sh4dov.ecigaretterefiller.FileDialog;
+import com.sh4dov.ecigaretterefiller.R;
+import com.sh4dov.gdrive.GDriveWriteFile;
+import com.sh4dov.model.Refill;
+import com.sh4dov.repositories.DbHandler;
+import com.sh4dov.repositories.RefillsRepository;
 
 
 public class MainActivity extends Activity
@@ -51,7 +47,7 @@ implements NewRefillFragment.RefillRepository, ItemFragment.ItemOperations, Noti
 
     RefillsRepository db;
     FileDialog fileDialog;
-    private GDriveController gdriveController;
+    private GDriveWriteFile gdriveController;
 
     @Override
     public void showInfo(String message) {
@@ -69,7 +65,7 @@ implements NewRefillFragment.RefillRepository, ItemFragment.ItemOperations, Noti
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        gdriveController = new GDriveController(this, RequestCodes.RESOLVE_CONNECTION_REQUEST_CODE, this);
+        gdriveController = new GDriveWriteFile(this, RequestCodes.RESOLVE_CONNECTION_REQUEST_CODE, this);
 
         final Context context = this;
         fileDialog = new FileDialog(this, new File(".."));

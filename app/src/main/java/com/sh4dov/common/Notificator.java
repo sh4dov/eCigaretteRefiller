@@ -1,4 +1,4 @@
-package com.sh4dov.ecigaretterefiller;
+package com.sh4dov.common;
 
 /**
  * Created by sh4dov on 2014-12-15.

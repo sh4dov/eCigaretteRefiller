@@ -1,4 +1,4 @@
-package com.sh4dov.ecigaretterefiller;
+package com.sh4dov.ecigaretterefiller.viewModels;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -7,6 +7,11 @@ import android.view.View;
 import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.NumberPicker;
+
+import com.sh4dov.ecigaretterefiller.R;
+import com.sh4dov.model.Refill;
+import com.sh4dov.repositories.DbHandler;
+import com.sh4dov.repositories.RefillsRepository;
 
 import java.util.Calendar;
 

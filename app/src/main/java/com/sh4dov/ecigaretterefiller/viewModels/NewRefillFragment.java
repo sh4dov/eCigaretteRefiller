@@ -1,7 +1,6 @@
-package com.sh4dov.ecigaretterefiller;
+package com.sh4dov.ecigaretterefiller.viewModels;
 
 import android.app.Activity;
-import android.hardware.Camera;
 import android.os.Bundle;
 import android.app.Fragment;
 import android.view.LayoutInflater;
@@ -11,6 +10,9 @@ import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.NumberPicker;
+
+import com.sh4dov.ecigaretterefiller.R;
+import com.sh4dov.model.Refill;
 
 import java.util.Calendar;
 

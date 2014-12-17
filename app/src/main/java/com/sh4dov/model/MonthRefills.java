@@ -1,4 +1,6 @@
-package com.sh4dov.ecigaretterefiller;
+package com.sh4dov.model;
+
+import com.sh4dov.model.Refill;
 
 import java.util.ArrayList;
 import java.util.Calendar;

@@ -1,4 +1,4 @@
-package com.sh4dov.ecigaretterefiller;
+package com.sh4dov.ecigaretterefiller.viewModels;
 
 import android.app.Activity;
 import android.os.Bundle;
@@ -10,6 +10,12 @@ import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.ListAdapter;
 import android.widget.TextView;
+
+import com.sh4dov.ecigaretterefiller.R;
+import com.sh4dov.ecigaretterefiller.adapters.RefillsAdapter;
+import com.sh4dov.model.Refill;
+import com.sh4dov.repositories.DbHandler;
+import com.sh4dov.repositories.RefillsRepository;
 
 import java.util.ArrayList;
 

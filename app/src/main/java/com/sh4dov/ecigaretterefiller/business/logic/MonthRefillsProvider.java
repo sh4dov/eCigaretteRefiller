@@ -1,4 +1,8 @@
-package com.sh4dov.ecigaretterefiller;
+package com.sh4dov.ecigaretterefiller.business.logic;
+
+import com.sh4dov.model.MonthRefills;
+import com.sh4dov.model.Refill;
+import com.sh4dov.repositories.RefillsRepository;
 
 import java.util.ArrayList;
 import java.util.Calendar;

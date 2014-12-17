@@ -1,4 +1,4 @@
-package com.sh4dov.ecigaretterefiller;
+package com.sh4dov.model;
 
 import java.io.Serializable;
 import java.util.Date;
