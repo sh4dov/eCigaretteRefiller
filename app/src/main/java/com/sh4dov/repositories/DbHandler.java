@@ -12,9 +12,11 @@ import com.sh4dov.model.Refill;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.StringReader;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -157,10 +159,30 @@ public class DbHandler extends SQLiteOpenHelper implements RefillsRepository {
     }
 
     @Override
-    public void importFromCsv(File file)  {
+    public void importFrom(File file)  {
+        BufferedReader reader;
+
+        try {
+            reader = new BufferedReader(new FileReader(file));
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            return;
+        }
+
+        importFrom(reader);
+    }
+
+    @Override
+    public void importFrom(String value){
+        StringReader stringReader = new StringReader(value);
+        BufferedReader bufferedReader = new BufferedReader(stringReader);
+        importFrom(bufferedReader);
+    }
+
+    private void importFrom(BufferedReader reader) {
         SQLiteDatabase db = this.getWritableDatabase();
         try {
-            BufferedReader reader = new BufferedReader(new FileReader(file));
+
             String line;
 
             reader.readLine();

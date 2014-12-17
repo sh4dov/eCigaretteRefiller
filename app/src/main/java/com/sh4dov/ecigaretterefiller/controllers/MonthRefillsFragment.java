@@ -1,4 +1,4 @@
-package com.sh4dov.ecigaretterefiller.viewModels;
+package com.sh4dov.ecigaretterefiller.controllers;
 
 import android.app.Activity;
 import android.os.Bundle;
@@ -11,16 +11,24 @@ import android.widget.AdapterView;
 import android.widget.ListAdapter;
 import android.widget.TextView;
 
+import com.sh4dov.ecigaretterefiller.adapters.MonthRefillsAdapter;
+import com.sh4dov.ecigaretterefiller.business.logic.MonthRefillsProvider;
 import com.sh4dov.ecigaretterefiller.R;
-import com.sh4dov.ecigaretterefiller.adapters.RefillsAdapter;
-import com.sh4dov.model.Refill;
+import com.sh4dov.model.MonthRefills;
 import com.sh4dov.repositories.DbHandler;
-import com.sh4dov.repositories.RefillsRepository;
 
 import java.util.ArrayList;
 
-
-public class ItemFragment extends Fragment implements AbsListView.OnItemClickListener {
+/**
+ * A fragment representing a list of Items.
+ * <p/>
+ * Large screen devices (such as tablets) are supported by replacing the ListView
+ * with a GridView.
+ * <p/>
+ * Activities containing this fragment MUST implement the {@link MonthRefillsFragment.ItemOperations}
+ * interface.
+ */
+public class MonthRefillsFragment extends Fragment implements AbsListView.OnItemClickListener {
 
     private ItemOperations mListener;
 
@@ -34,14 +42,13 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
      * Views.
      */
     private ListAdapter mAdapter;
-
-    private ArrayList<Refill> refills;
+    private ArrayList<MonthRefills> monthRefills;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
      * fragment (e.g. upon screen orientation changes).
      */
-    public ItemFragment() {
+    public MonthRefillsFragment() {
     }
 
     @Override
@@ -52,12 +59,13 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_item, container, false);
+        View view = inflater.inflate(R.layout.fragment_monthrefills, container, false);
 
         Activity activity = getActivity();
-        RefillsRepository db = new DbHandler(activity, null);
-        refills = db.getRefills();
-        mAdapter = new RefillsAdapter(activity, refills);
+        MonthRefillsProvider provider = new MonthRefillsProvider(new DbHandler(activity, null));
+        monthRefills = provider.Get();
+        mAdapter = new MonthRefillsAdapter(activity, monthRefills);
+
         // Set the adapter
         mListView = (AbsListView) view.findViewById(android.R.id.list);
         mListView.setAdapter(mAdapter);
@@ -72,7 +80,7 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
     public void onAttach(Activity activity) {
         super.onAttach(activity);
         try {
-            mListener = (ItemOperations) activity;
+            //mListener = (ItemOperations) activity;
         } catch (ClassCastException e) {
             throw new ClassCastException(activity.toString()
                     + " must implement ItemOperations");
@@ -91,7 +99,7 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
         if (null != mListener) {
             // Notify the active callbacks interface (the activity, if the
             // fragment is attached to one) that an item has been selected.
-            mListener.EditRefill(refills.get(position));
+            mListener.onFragmentInteraction(monthRefills.get(position));
         }
     }
 
@@ -108,7 +116,18 @@ public class ItemFragment extends Fragment implements AbsListView.OnItemClickLis
         }
     }
 
+    /**
+     * This interface must be implemented by activities that contain this
+     * fragment to allow an interaction in this fragment to be communicated
+     * to the activity and potentially other fragments contained in that
+     * activity.
+     * <p/>
+     * See the Android Training lesson <a href=
+     * "http://developer.android.com/training/basics/fragments/communicating.html"
+     * >Communicating with Other Fragments</a> for more information.
+     */
     public interface ItemOperations {
-        public void EditRefill(Refill refill);
+        public void onFragmentInteraction(MonthRefills id);
     }
+
 }

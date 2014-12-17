@@ -27,5 +27,7 @@
     <string name="export_to_csv">to csv</string>
     <string name="import_from_csv">from csv</string>
     <string name="import_from_gdrive">from GDrive</string>
+    <string name="backup_gdrive">Backup in GDrive</string>
+    <string name="restore_gdrive">Restore from GDrive</string>
 
 </resources>

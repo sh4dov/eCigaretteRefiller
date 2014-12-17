@@ -45,7 +45,7 @@ implements ResultCallback<DriveApi.DriveContentsResult> {
             writer.write(content);
             writer.flush();
         } catch (IOException e) {
-            showInfo(e.getMessage());
+            onFail(e.getMessage());
         }
 
         IntentSender intentSender = Drive.DriveApi
@@ -58,16 +58,12 @@ implements ResultCallback<DriveApi.DriveContentsResult> {
             getActivity().startIntentSenderForResult(intentSender, requestCodeCreator, null, 0, 0, 0);
         }
         catch(IntentSender.SendIntentException e){
-            showInfo(e.getMessage());
+            onFail(e.getMessage());
         }
     }
 
-    public void connect() {
-        getGoogleApiClient().connect();
-    }
-
-    public GDriveWriteFile(Activity activity, int resolveConnectionRequestCode, Notificator notificator){
-        super(activity, resolveConnectionRequestCode, notificator);
+    public GDriveWriteFile(Activity activity, int resolveConnectionRequestCode){
+        super(activity, resolveConnectionRequestCode);
     }
 
     @Override
@@ -87,6 +83,6 @@ implements ResultCallback<DriveApi.DriveContentsResult> {
     public void writeFile(int requestCodeCreator, String content){
         this.requestCodeCreator = requestCodeCreator;
         this.content = content;
-        getGoogleApiClient().connect();
+        connect();
     }
 }

@@ -2,6 +2,7 @@ package com.sh4dov.repositories;
 
 import com.sh4dov.model.Refill;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.util.ArrayList;
 
@@ -13,7 +14,9 @@ public interface RefillsRepository {
 
     ArrayList<Refill> getRefills();
 
-    void importFromCsv(File file);
+    void importFrom(File file);
+
+    void importFrom(String value);
 
     Refill getLastRefill();
 

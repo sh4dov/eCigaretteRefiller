@@ -1,5 +1,6 @@
-package com.sh4dov.ecigaretterefiller.viewModels;
+package com.sh4dov.ecigaretterefiller.controllers;
 
+import java.io.BufferedReader;
 import java.io.File;
 
 import android.app.Activity;
@@ -21,6 +22,9 @@ import com.sh4dov.common.Notificator;
 import com.sh4dov.ecigaretterefiller.business.logic.AverageProvider;
 import com.sh4dov.ecigaretterefiller.FileDialog;
 import com.sh4dov.ecigaretterefiller.R;
+import com.sh4dov.gdrive.GDriveBackup;
+import com.sh4dov.gdrive.GDriveBase;
+import com.sh4dov.gdrive.GDriveRestore;
 import com.sh4dov.gdrive.GDriveWriteFile;
 import com.sh4dov.model.Refill;
 import com.sh4dov.repositories.DbHandler;
@@ -47,7 +51,20 @@ implements NewRefillFragment.RefillRepository, ItemFragment.ItemOperations, Noti
 
     RefillsRepository db;
     FileDialog fileDialog;
-    private GDriveWriteFile gdriveController;
+    private GDriveWriteFile gDriveWriteFile;
+    private GDriveBackup gdriveBackup;
+    private GDriveBase.GDriveListener notificatorListener = new GDriveBase.GDriveListener() {
+        @Override
+        public void onSuccess(String message) {
+            showInfo(message);
+        }
+
+        @Override
+        public void onFail(String message) {
+            showInfo(message);
+        }
+    };
+    private GDriveRestore gDriveRestore;
 
     @Override
     public void showInfo(String message) {
@@ -58,6 +75,8 @@ implements NewRefillFragment.RefillRepository, ItemFragment.ItemOperations, Noti
         public static final int EDIT = 1;
         public static final int RESOLVE_CONNECTION_REQUEST_CODE = 2;
         public static final int REQUEST_CODE_CREATOR = 3;
+        public static final int RESOLVE_BACKUP_CONNECTION_REQUEST_CODE = 4;
+        public static final int RESOLVE_RESTORE_CONNECTION_REQUEST_CODE = 5;
     }
 
     @Override
@@ -65,9 +84,38 @@ implements NewRefillFragment.RefillRepository, ItemFragment.ItemOperations, Noti
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        gdriveController = new GDriveWriteFile(this, RequestCodes.RESOLVE_CONNECTION_REQUEST_CODE, this);
+        gDriveWriteFile = new GDriveWriteFile(this, RequestCodes.RESOLVE_CONNECTION_REQUEST_CODE);
+        gDriveWriteFile.addListener(notificatorListener);
+        gdriveBackup = new GDriveBackup(this, RequestCodes.RESOLVE_BACKUP_CONNECTION_REQUEST_CODE);
+        gdriveBackup.addListener(notificatorListener);
+        gDriveRestore = new GDriveRestore(this, RequestCodes.RESOLVE_RESTORE_CONNECTION_REQUEST_CODE);
+        gDriveRestore.addListener(notificatorListener);
+        gDriveRestore.addListener(new GDriveRestore.RestoreListener() {
+            @Override
+            public void RestoreFrom(final String value) {
+                DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener(){
+                    @Override
+                    public void onClick(DialogInterface dialogInterface,  int which){
+                        switch (which){
+                            case DialogInterface.BUTTON_POSITIVE:
+                                db.clear();
+                                break;
+                        }
 
-        final Context context = this;
+                        db.importFrom(value);
+                        showInfo("Successfully restored.");
+                        mSectionsPagerAdapter.notifyDataSetChanged();
+                    }
+                };
+
+                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                builder.setMessage("Delete data from database?")
+                        .setPositiveButton("Yes", dialogClickListener)
+                        .setNegativeButton("No", dialogClickListener)
+                        .show();
+            }
+        });
+
         fileDialog = new FileDialog(this, new File(".."));
         fileDialog.setFileEndsWith(".csv");
         fileDialog.addFileListener(new FileDialog.FileSelectedListener(){
@@ -80,18 +128,14 @@ implements NewRefillFragment.RefillRepository, ItemFragment.ItemOperations, Noti
                             case DialogInterface.BUTTON_POSITIVE:
                                 db.clear();
                                 break;
-
-                            case DialogInterface.BUTTON_NEGATIVE:
-
-                                break;
                         }
 
-                        db.importFromCsv(csvFile);
+                        db.importFrom(csvFile);
                         mSectionsPagerAdapter.notifyDataSetChanged();
                     }
                 };
 
-                AlertDialog.Builder builder = new AlertDialog.Builder(context);
+                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
                 builder.setMessage("Delete data from database?")
                         .setPositiveButton("Yes", dialogClickListener)
                         .setNegativeButton("No", dialogClickListener)
@@ -144,7 +188,15 @@ implements NewRefillFragment.RefillRepository, ItemFragment.ItemOperations, Noti
                 return true;
 
             case R.id.action_export_gdrive:
-                gdriveController.writeFile(RequestCodes.REQUEST_CODE_CREATOR, db.exportToString());
+                gDriveWriteFile.writeFile(RequestCodes.REQUEST_CODE_CREATOR, db.exportToString());
+                return true;
+
+            case R.id.action_backup_gdrive:
+                gdriveBackup.backup(db.exportToString());
+                return true;
+
+            case R.id.action_restore_gdrive:
+                gDriveRestore.restore();
                 return true;
         }
 
@@ -197,7 +249,19 @@ implements NewRefillFragment.RefillRepository, ItemFragment.ItemOperations, Noti
 
             case RequestCodes.RESOLVE_CONNECTION_REQUEST_CODE:
                 if(resultCode == RESULT_OK){
-                    gdriveController.connect();
+                    gDriveWriteFile.connect();
+                }
+                break;
+
+            case RequestCodes.RESOLVE_BACKUP_CONNECTION_REQUEST_CODE:
+                if(resultCode == RESULT_OK){
+                    gdriveBackup.connect();
+                }
+                break;
+
+            case RequestCodes.RESOLVE_RESTORE_CONNECTION_REQUEST_CODE:
+                if(resultCode == RESULT_OK){
+                    gDriveRestore.connect();
                 }
                 break;
 

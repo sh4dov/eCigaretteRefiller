@@ -8,6 +8,7 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.sh4dov.common.Notificator;
+import com.sh4dov.ecigaretterefiller.ListenerList;
 
 /**
  * Created by sh4dov on 2014-12-17.
@@ -18,16 +19,47 @@ public abstract class GDriveBase
     private final Activity activity;
     private final int resolveConnectionRequestCode;
     private final GoogleApiClient googleApiClient;
-    private Notificator notificator;
+    private ListenerList<GDriveListener> listeners = new ListenerList<GDriveListener>();
 
-    public GDriveBase(Activity activity, int resolveConnectionRequestCode, Notificator notificator){
+    public interface GDriveListener{
+        void onSuccess(String message);
+        void onFail(String message);
+    }
+
+    public void addListener(GDriveListener listener){listeners.add(listener);}
+
+    protected void onSuccess(final String message){
+        listeners.fireEvent(new ListenerList.FireHandler<GDriveListener>() {
+            @Override
+            public void fireEvent(GDriveListener listener) {
+                listener.onSuccess(message);
+            }
+        });
+    }
+
+    protected void onFail(final String message){
+        listeners.fireEvent(new ListenerList.FireHandler<GDriveListener>() {
+            @Override
+            public void fireEvent(GDriveListener listener) {
+                listener.onFail(message);
+            }
+        });
+    }
+
+    public GDriveBase(Activity activity, int resolveConnectionRequestCode){
         this.activity = activity;
         this.resolveConnectionRequestCode = resolveConnectionRequestCode;
-        this.notificator = notificator;
 
         googleApiClient = setup(new GoogleApiClient
                 .Builder(activity,this, this))
                 .build();
+    }
+
+    public void connect() {
+        if(googleApiClient.isConnected()){
+            googleApiClient.disconnect();
+        }
+        googleApiClient.connect();
     }
 
     protected abstract GoogleApiClient.Builder setup(GoogleApiClient.Builder builder);
@@ -35,12 +67,6 @@ public abstract class GDriveBase
     protected GoogleApiClient getGoogleApiClient() {return googleApiClient;}
 
     protected Activity getActivity(){return activity;}
-
-    protected void showInfo(String message){
-        if(notificator != null){
-            notificator.showInfo(message);
-        }
-    }
 
     @Override
     public void onConnected(Bundle bundle) {
@@ -56,7 +82,7 @@ public abstract class GDriveBase
             try {
                 connectionResult.startResolutionForResult(activity, resolveConnectionRequestCode);
             } catch (IntentSender.SendIntentException e) {
-                showInfo(e.getMessage());
+                onFail(e.getMessage());
             }
         } else {
             GooglePlayServicesUtil

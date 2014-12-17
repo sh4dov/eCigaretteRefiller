@@ -1,4 +1,4 @@
-package com.sh4dov.ecigaretterefiller.viewModels;
+package com.sh4dov.ecigaretterefiller.controllers;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
