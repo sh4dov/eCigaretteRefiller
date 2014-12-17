@@ -5,6 +5,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.text.TextUtils;
 
 import com.sh4dov.common.Notificator;
 import com.sh4dov.model.Refill;
@@ -24,7 +25,9 @@ import java.util.ArrayList;
  */
 public class DbHandler extends SQLiteOpenHelper implements RefillsRepository {
     public static final String DatabaseName = "ecigaretterefills.db";
+
     private Notificator notificator;
+    private String[] columns = new String[] {"Id", "Date", "Size", "Name", "IsDeleted"};
 
     public DbHandler(Context context, Notificator notificator){
         super(context, DatabaseName, null, 1);
@@ -100,7 +103,8 @@ public class DbHandler extends SQLiteOpenHelper implements RefillsRepository {
     public String exportToString(){
         StringBuffer buffer = new StringBuffer();
         String newLine = "\r\n";
-        buffer.append("Id;Date;Size;Name;IsDeleted" + newLine);
+
+        buffer.append(TextUtils.join(";", columns) + newLine);
 
         SQLiteDatabase db = this.getReadableDatabase();
 
@@ -164,13 +168,17 @@ public class DbHandler extends SQLiteOpenHelper implements RefillsRepository {
                 String[] values = line.split(";");
 
                 ContentValues cv = new ContentValues();
+                cv.put("Id", values[0]);
                 cv.put("Date", values[1]);
                 cv.put("Size", values[2]);
                 cv.put("Name", values[3]);
                 cv.put("IsDeleted", values[4]);
 
 
-                db.insert("Refills", null, cv);
+                int id = db.updateWithOnConflict("Refills", cv, "Id=?", new String[] {values[0]}, SQLiteDatabase.CONFLICT_REPLACE);
+                if(id <= 0){
+                    db.insert("Refills", null, cv);
+                }
             }
         }
         catch(IOException e){
