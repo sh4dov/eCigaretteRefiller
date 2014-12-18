@@ -2,6 +2,7 @@ package com.sh4dov.ecigaretterefiller.controllers;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.util.concurrent.FutureTask;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -21,6 +22,7 @@ import android.widget.Toast;
 
 import com.sh4dov.common.Notificator;
 import com.sh4dov.common.ProgressIndicator;
+import com.sh4dov.common.TaskScheduler;
 import com.sh4dov.ecigaretterefiller.business.logic.AverageProvider;
 import com.sh4dov.ecigaretterefiller.FileDialog;
 import com.sh4dov.ecigaretterefiller.R;
@@ -34,7 +36,7 @@ import com.sh4dov.repositories.RefillsRepository;
 
 
 public class MainActivity extends Activity
-implements NewRefillFragment.RefillRepository, ItemFragment.ItemOperations, Notificator {
+        implements NewRefillFragment.RefillRepository, ItemFragment.ItemOperations, Notificator {
 
     /**
      * The {@link android.support.v4.view.PagerAdapter} that will provide
@@ -73,7 +75,7 @@ implements NewRefillFragment.RefillRepository, ItemFragment.ItemOperations, Noti
         Toast.makeText(this, message, Toast.LENGTH_LONG).show();
     }
 
-    private static class RequestCodes{
+    private static class RequestCodes {
         public static final int EDIT = 1;
         public static final int RESOLVE_CONNECTION_REQUEST_CODE = 2;
         public static final int REQUEST_CODE_CREATOR = 3;
@@ -95,28 +97,29 @@ implements NewRefillFragment.RefillRepository, ItemFragment.ItemOperations, Noti
         gDriveRestore.addListener(new GDriveRestore.RestoreListener() {
             @Override
             public void RestoreFrom(final String value) {
-                DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener(){
+                DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
                     @Override
-                    public void onClick(DialogInterface dialogInterface,  final int which){
-                        new ProgressIndicator(MainActivity.this, ProgressDialog.STYLE_SPINNER, new Runnable() {
-                            @Override
-                            public void run() {
-                                switch (which){
-                                    case DialogInterface.BUTTON_POSITIVE:
-                                        db.clear();
-                                        break;
-                                }
+                    public void onClick(DialogInterface dialogInterface, final int which) {
+                        new ProgressIndicator(MainActivity.this, ProgressDialog.STYLE_SPINNER, new TaskScheduler(MainActivity.this)
+                                .willExecute(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        switch (which) {
+                                            case DialogInterface.BUTTON_POSITIVE:
+                                                db.clear();
+                                                break;
+                                        }
 
-                                db.importFrom(value);
-                                runOnUiThread(new Runnable() {
+                                        db.importFrom(value);
+                                    }
+                                })
+                                .willExecuteOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
                                         showInfo("Successfully restored.");
                                         mSectionsPagerAdapter.notifyDataSetChanged();
                                     }
-                                });
-                            }
-                        }).execute();
+                                })).execute();
                     }
                 };
 
@@ -130,32 +133,32 @@ implements NewRefillFragment.RefillRepository, ItemFragment.ItemOperations, Noti
 
         fileDialog = new FileDialog(this, new File(".."));
         fileDialog.setFileEndsWith(".csv");
-        fileDialog.addFileListener(new FileDialog.FileSelectedListener(){
-            public void fileSelected(File file){
+        fileDialog.addFileListener(new FileDialog.FileSelectedListener() {
+            public void fileSelected(File file) {
                 final File csvFile = file;
-                DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener(){
+                DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
                     @Override
-                public void onClick(DialogInterface dialogInterface,  final int which){
-                        new ProgressIndicator(MainActivity.this, ProgressDialog.STYLE_SPINNER, new Runnable() {
-                            @Override
-                            public void run() {
-                                switch (which){
-                                    case DialogInterface.BUTTON_POSITIVE:
-                                        db.clear();
-                                        break;
-                                }
+                    public void onClick(DialogInterface dialogInterface, final int which) {
+                        new ProgressIndicator(MainActivity.this, ProgressDialog.STYLE_SPINNER, new TaskScheduler(MainActivity.this)
+                                .willExecute(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        switch (which) {
+                                            case DialogInterface.BUTTON_POSITIVE:
+                                                db.clear();
+                                                break;
+                                        }
 
-                                db.importFrom(csvFile);
-                                runOnUiThread(new Runnable() {
+                                        db.importFrom(csvFile);
+                                    }
+                                })
+                                .willExecuteOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
                                         mSectionsPagerAdapter.notifyDataSetChanged();
                                         showInfo("Successfully imported from csv");
                                     }
-                                });
-
-                            }
-                        }).execute();
+                                })).execute();
                     }
                 };
 
@@ -195,9 +198,9 @@ implements NewRefillFragment.RefillRepository, ItemFragment.ItemOperations, Noti
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        switch(id){
+        switch (id) {
             case R.id.action_settings:
-            return true;
+                return true;
 
             case R.id.action_import_csv:
                 importFromCsv();
@@ -232,10 +235,9 @@ implements NewRefillFragment.RefillRepository, ItemFragment.ItemOperations, Noti
         dialog.addFileListener(new SaveFileDialog.FileListener() {
             @Override
             public void fileSelected(File file) {
-                if(db.exportToCsv(file)){
+                if (db.exportToCsv(file)) {
                     Toast.makeText(MainActivity.this, R.string.successfully_exported, Toast.LENGTH_SHORT).show();
-                }
-                else{
+                } else {
                     Toast.makeText(MainActivity.this, R.string.cannot_export, Toast.LENGTH_SHORT).show();
                 }
             }
@@ -245,7 +247,7 @@ implements NewRefillFragment.RefillRepository, ItemFragment.ItemOperations, Noti
 
     }
 
-    private void importFromCsv(){
+    private void importFromCsv() {
         fileDialog.showDialog();
     }
 
@@ -264,33 +266,32 @@ implements NewRefillFragment.RefillRepository, ItemFragment.ItemOperations, Noti
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data){
-        switch(requestCode)
-        {
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch (requestCode) {
             case RequestCodes.EDIT:
                 mSectionsPagerAdapter.notifyDataSetChanged();
                 break;
 
             case RequestCodes.RESOLVE_CONNECTION_REQUEST_CODE:
-                if(resultCode == RESULT_OK){
+                if (resultCode == RESULT_OK) {
                     gDriveWriteFile.connect();
                 }
                 break;
 
             case RequestCodes.RESOLVE_BACKUP_CONNECTION_REQUEST_CODE:
-                if(resultCode == RESULT_OK){
+                if (resultCode == RESULT_OK) {
                     gdriveBackup.connect();
                 }
                 break;
 
             case RequestCodes.RESOLVE_RESTORE_CONNECTION_REQUEST_CODE:
-                if(resultCode == RESULT_OK){
+                if (resultCode == RESULT_OK) {
                     gDriveRestore.connect();
                 }
                 break;
 
             case RequestCodes.REQUEST_CODE_CREATOR:
-                if(resultCode == RESULT_OK){
+                if (resultCode == RESULT_OK) {
                     showInfo("Exported to GDrive");
                 }
         }
@@ -330,7 +331,7 @@ implements NewRefillFragment.RefillRepository, ItemFragment.ItemOperations, Noti
         }
     }
 
-    public  class FragmentFactory {
+    public class FragmentFactory {
         private static final int Overview = 0;
         private static final int NewRefill = 1;
         private static final int RefillList = 2;
@@ -338,7 +339,7 @@ implements NewRefillFragment.RefillRepository, ItemFragment.ItemOperations, Noti
 
         private final AverageProvider averageProvider;
 
-        public FragmentFactory(AverageProvider averageProvider){
+        public FragmentFactory(AverageProvider averageProvider) {
             this.averageProvider = averageProvider;
         }
 
@@ -346,7 +347,7 @@ implements NewRefillFragment.RefillRepository, ItemFragment.ItemOperations, Noti
             Fragment fragment;
             Bundle args = new Bundle();
 
-            switch(sectionNumber){
+            switch (sectionNumber) {
                 case RefillList:
                     fragment = new ItemFragment();
                     fragment.setArguments(args);
@@ -355,7 +356,7 @@ implements NewRefillFragment.RefillRepository, ItemFragment.ItemOperations, Noti
                 case NewRefill:
                     fragment = new NewRefillFragment();
                     Refill refill = db.getLastRefill();
-                    if(refill != null){
+                    if (refill != null) {
                         args.putDouble(NewRefillFragment.SizeKey, refill.size);
                         args.putString(NewRefillFragment.NameKey, refill.name);
                     }

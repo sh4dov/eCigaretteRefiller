@@ -45,12 +45,9 @@ public class ProgressIndicator extends AsyncTask<Void, Integer, Void> {
     protected Void doInBackground(Void... values) {
         try {
             job.run();
-
         } catch (Exception e) {
             e.printStackTrace();
         }
-
-        mProgress.dismiss();
 
         return null;
     }
