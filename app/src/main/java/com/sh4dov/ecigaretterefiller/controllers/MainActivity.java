@@ -7,6 +7,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Fragment;
 import android.app.FragmentManager;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -19,6 +20,7 @@ import android.view.MenuItem;
 import android.widget.Toast;
 
 import com.sh4dov.common.Notificator;
+import com.sh4dov.common.ProgressIndicator;
 import com.sh4dov.ecigaretterefiller.business.logic.AverageProvider;
 import com.sh4dov.ecigaretterefiller.FileDialog;
 import com.sh4dov.ecigaretterefiller.R;
@@ -95,16 +97,26 @@ implements NewRefillFragment.RefillRepository, ItemFragment.ItemOperations, Noti
             public void RestoreFrom(final String value) {
                 DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener(){
                     @Override
-                    public void onClick(DialogInterface dialogInterface,  int which){
-                        switch (which){
-                            case DialogInterface.BUTTON_POSITIVE:
-                                db.clear();
-                                break;
-                        }
+                    public void onClick(DialogInterface dialogInterface,  final int which){
+                        new ProgressIndicator(MainActivity.this, ProgressDialog.STYLE_SPINNER, new Runnable() {
+                            @Override
+                            public void run() {
+                                switch (which){
+                                    case DialogInterface.BUTTON_POSITIVE:
+                                        db.clear();
+                                        break;
+                                }
 
-                        db.importFrom(value);
-                        showInfo("Successfully restored.");
-                        mSectionsPagerAdapter.notifyDataSetChanged();
+                                db.importFrom(value);
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        showInfo("Successfully restored.");
+                                        mSectionsPagerAdapter.notifyDataSetChanged();
+                                    }
+                                });
+                            }
+                        }).execute();
                     }
                 };
 
@@ -123,15 +135,27 @@ implements NewRefillFragment.RefillRepository, ItemFragment.ItemOperations, Noti
                 final File csvFile = file;
                 DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener(){
                     @Override
-                public void onClick(DialogInterface dialogInterface,  int which){
-                        switch (which){
-                            case DialogInterface.BUTTON_POSITIVE:
-                                db.clear();
-                                break;
-                        }
+                public void onClick(DialogInterface dialogInterface,  final int which){
+                        new ProgressIndicator(MainActivity.this, ProgressDialog.STYLE_SPINNER, new Runnable() {
+                            @Override
+                            public void run() {
+                                switch (which){
+                                    case DialogInterface.BUTTON_POSITIVE:
+                                        db.clear();
+                                        break;
+                                }
 
-                        db.importFrom(csvFile);
-                        mSectionsPagerAdapter.notifyDataSetChanged();
+                                db.importFrom(csvFile);
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        mSectionsPagerAdapter.notifyDataSetChanged();
+                                        showInfo("Successfully imported from csv");
+                                    }
+                                });
+
+                            }
+                        }).execute();
                     }
                 };
 
