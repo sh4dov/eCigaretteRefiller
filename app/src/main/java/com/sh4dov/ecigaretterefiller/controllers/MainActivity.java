@@ -22,6 +22,7 @@ import android.widget.Toast;
 
 import com.sh4dov.common.Notificator;
 import com.sh4dov.common.ProgressIndicator;
+import com.sh4dov.common.ProgressPointerIndicator;
 import com.sh4dov.common.TaskScheduler;
 import com.sh4dov.ecigaretterefiller.business.logic.AverageProvider;
 import com.sh4dov.ecigaretterefiller.FileDialog;
@@ -100,7 +101,8 @@ public class MainActivity extends Activity
                 DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, final int which) {
-                        new ProgressIndicator(MainActivity.this, ProgressDialog.STYLE_SPINNER, new TaskScheduler(MainActivity.this)
+                        final ProgressPointerIndicator progressPointer = new ProgressPointerIndicator();
+                        ProgressIndicator progressIndicator = new ProgressIndicator(MainActivity.this, ProgressDialog.STYLE_HORIZONTAL, new TaskScheduler(MainActivity.this)
                                 .willExecute(new Runnable() {
                                     @Override
                                     public void run() {
@@ -110,7 +112,7 @@ public class MainActivity extends Activity
                                                 break;
                                         }
 
-                                        db.importFrom(value);
+                                        db.importFrom(value, progressPointer);
                                     }
                                 })
                                 .willExecuteOnUiThread(new Runnable() {
@@ -119,7 +121,9 @@ public class MainActivity extends Activity
                                         showInfo("Successfully restored.");
                                         mSectionsPagerAdapter.notifyDataSetChanged();
                                     }
-                                })).execute();
+                                }));
+                        progressPointer.setProgressPointer(progressPointer);
+                        progressIndicator.execute();
                     }
                 };
 
@@ -139,7 +143,8 @@ public class MainActivity extends Activity
                 DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, final int which) {
-                        new ProgressIndicator(MainActivity.this, ProgressDialog.STYLE_SPINNER, new TaskScheduler(MainActivity.this)
+                        final ProgressPointerIndicator progressPointer = new ProgressPointerIndicator();
+                        ProgressIndicator progressIndicator = new ProgressIndicator(MainActivity.this, ProgressDialog.STYLE_HORIZONTAL, new TaskScheduler(MainActivity.this)
                                 .willExecute(new Runnable() {
                                     @Override
                                     public void run() {
@@ -149,7 +154,7 @@ public class MainActivity extends Activity
                                                 break;
                                         }
 
-                                        db.importFrom(csvFile);
+                                        db.importFrom(csvFile, progressPointer);
                                     }
                                 })
                                 .willExecuteOnUiThread(new Runnable() {
@@ -158,7 +163,9 @@ public class MainActivity extends Activity
                                         mSectionsPagerAdapter.notifyDataSetChanged();
                                         showInfo("Successfully imported from csv");
                                     }
-                                })).execute();
+                                }));
+                        progressPointer.setProgressPointer(progressIndicator);
+                        progressIndicator.execute();
                     }
                 };
 

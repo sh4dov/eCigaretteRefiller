@@ -1,5 +1,6 @@
 package com.sh4dov.repositories;
 
+import com.sh4dov.common.ProgressPointer;
 import com.sh4dov.model.Refill;
 
 import java.io.BufferedReader;
@@ -14,9 +15,9 @@ public interface RefillsRepository {
 
     ArrayList<Refill> getRefills();
 
-    void importFrom(File file);
+    void importFrom(File file, ProgressPointer progressPointer);
 
-    void importFrom(String value);
+    void importFrom(String value, ProgressPointer progressPointer);
 
     Refill getLastRefill();
 

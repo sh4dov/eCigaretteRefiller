@@ -8,6 +8,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.text.TextUtils;
 
 import com.sh4dov.common.Notificator;
+import com.sh4dov.common.ProgressPointer;
 import com.sh4dov.model.Refill;
 
 import java.io.BufferedReader;
@@ -29,9 +30,9 @@ public class DbHandler extends SQLiteOpenHelper implements RefillsRepository {
     public static final String DatabaseName = "ecigaretterefills.db";
 
     private Notificator notificator;
-    private String[] columns = new String[] {"Id", "Date", "Size", "Name", "IsDeleted"};
+    private String[] columns = new String[]{"Id", "Date", "Size", "Name", "IsDeleted"};
 
-    public DbHandler(Context context, Notificator notificator){
+    public DbHandler(Context context, Notificator notificator) {
         super(context, DatabaseName, null, 1);
         this.notificator = notificator;
     }
@@ -47,7 +48,7 @@ public class DbHandler extends SQLiteOpenHelper implements RefillsRepository {
     }
 
     @Override
-    public void Add(Refill refill){
+    public void Add(Refill refill) {
         ContentValues values = new ContentValues();
         values.put("Date", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(refill.date));
         values.put("Size", refill.size);
@@ -60,22 +61,22 @@ public class DbHandler extends SQLiteOpenHelper implements RefillsRepository {
     }
 
     @Override
-    public ArrayList<Refill> getRefills(){
+    public ArrayList<Refill> getRefills() {
         SQLiteDatabase db = this.getReadableDatabase();
 
         Cursor c = db.rawQuery("SELECT * FROM Refills WHERE NOT IsDeleted ORDER BY Date DESC", null);
         ArrayList<Refill> result = new ArrayList<Refill>();
 
-        if(!c.moveToFirst()){
+        if (!c.moveToFirst()) {
             c.close();
             return result;
         }
 
-        do{
+        do {
             Refill r = getRefill(c);
             result.add(r);
         }
-        while(c.moveToNext());
+        while (c.moveToNext());
         c.close();
         db.close();
 
@@ -95,14 +96,14 @@ public class DbHandler extends SQLiteOpenHelper implements RefillsRepository {
         return r;
     }
 
-    private void showInfo(String message){
-        if(notificator!= null){
+    private void showInfo(String message) {
+        if (notificator != null) {
             notificator.showInfo(message);
         }
     }
 
     @Override
-    public String exportToString(){
+    public String exportToString() {
         StringBuffer buffer = new StringBuffer();
         String newLine = "\r\n";
 
@@ -111,20 +112,20 @@ public class DbHandler extends SQLiteOpenHelper implements RefillsRepository {
         SQLiteDatabase db = this.getReadableDatabase();
 
         Cursor c = db.rawQuery("SELECT * FROM Refills", null);
-        if(!c.moveToFirst()){
+        if (!c.moveToFirst()) {
             c.close();
             db.close();
             return buffer.toString();
         }
 
-        do{
+        do {
             for (int i = 0; i < c.getColumnCount(); i++) {
                 buffer.append(c.getString(i));
                 buffer.append(";");
             }
             buffer.append(newLine);
         }
-        while(c.moveToNext());
+        while (c.moveToNext());
         c.close();
         db.close();
 
@@ -133,9 +134,9 @@ public class DbHandler extends SQLiteOpenHelper implements RefillsRepository {
 
     @Override
     public boolean exportToCsv(File file) {
-        if(!file.exists()){
+        if (!file.exists()) {
             try {
-                if(!file.createNewFile()){
+                if (!file.createNewFile()) {
                     return false;
                 }
             } catch (IOException e) {
@@ -159,7 +160,7 @@ public class DbHandler extends SQLiteOpenHelper implements RefillsRepository {
     }
 
     @Override
-    public void importFrom(File file)  {
+    public void importFrom(File file, ProgressPointer progressPointer) {
         BufferedReader reader;
 
         try {
@@ -169,24 +170,42 @@ public class DbHandler extends SQLiteOpenHelper implements RefillsRepository {
             return;
         }
 
-        importFrom(reader);
+        importFrom(reader, progressPointer);
     }
 
     @Override
-    public void importFrom(String value){
+    public void importFrom(String value, ProgressPointer progressPointer) {
         StringReader stringReader = new StringReader(value);
         BufferedReader bufferedReader = new BufferedReader(stringReader);
-        importFrom(bufferedReader);
+        importFrom(bufferedReader, progressPointer);
     }
 
-    private void importFrom(BufferedReader reader) {
+    private void setProgress(ProgressPointer progressPointer, int progress) {
+        if (progressPointer != null) {
+            progressPointer.setProgress(progress);
+        }
+    }
+
+    private void setMax(ProgressPointer progressPointer, int max) {
+        if (progressPointer != null) {
+            progressPointer.setMax(max);
+        }
+    }
+
+    private void importFrom(BufferedReader reader, ProgressPointer progressPointer) {
+        boolean isEmpty = getRefillsSize() == 0;
         SQLiteDatabase db = this.getWritableDatabase();
         try {
-
-            String line;
-
+            ArrayList<String> lines = new ArrayList<String>();
+            String l;
             reader.readLine();
-            while ((line = reader.readLine()) != null) {
+            while ((l = reader.readLine()) != null) {
+                lines.add(l);
+            }
+            setMax(progressPointer, lines.size());
+            int progress = 0;
+
+            for (String line : lines) {
                 String[] values = line.split(";");
 
                 ContentValues cv = new ContentValues();
@@ -196,26 +215,41 @@ public class DbHandler extends SQLiteOpenHelper implements RefillsRepository {
                 cv.put("Name", values[3]);
                 cv.put("IsDeleted", values[4]);
 
-
-                int id = db.updateWithOnConflict("Refills", cv, "Id=?", new String[] {values[0]}, SQLiteDatabase.CONFLICT_REPLACE);
-                if(id <= 0){
+                if (isEmpty) {
                     db.insert("Refills", null, cv);
+                } else {
+                    int id = db.updateWithOnConflict("Refills", cv, "Id=?", new String[]{values[0]}, SQLiteDatabase.CONFLICT_REPLACE);
+                    if (id <= 0) {
+                        db.insert("Refills", null, cv);
+                    }
                 }
+
+                setProgress(progressPointer, ++progress);
             }
-        }
-        catch(IOException e){
+        } catch (IOException e) {
             e.printStackTrace();
         }
         db.close();
     }
 
+    private int getRefillsSize() {
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        Cursor c = db.rawQuery("SELECT Count(*) FROM Refills", null);
+        c.moveToFirst();
+        int result = c.getInt(0);
+        c.close();
+        db.close();
+        return result;
+    }
+
     @Override
-    public Refill getLastRefill(){
+    public Refill getLastRefill() {
         SQLiteDatabase db = this.getReadableDatabase();
 
         Cursor c = db.rawQuery("SELECT * FROM Refills WHERE NOT IsDeleted ORDER BY Date DESC LIMIT 1", null);
 
-        if(!c.moveToFirst()){
+        if (!c.moveToFirst()) {
             c.close();
             return null;
         }
