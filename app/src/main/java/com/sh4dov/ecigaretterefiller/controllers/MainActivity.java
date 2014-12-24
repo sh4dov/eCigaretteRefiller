@@ -122,7 +122,7 @@ public class MainActivity extends Activity
                                         mSectionsPagerAdapter.notifyDataSetChanged();
                                     }
                                 }));
-                        progressPointer.setProgressPointer(progressPointer);
+                        progressPointer.setProgressPointer(progressIndicator);
                         progressIndicator.execute();
                     }
                 };
