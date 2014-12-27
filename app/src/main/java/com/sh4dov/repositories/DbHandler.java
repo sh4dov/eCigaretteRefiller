@@ -69,6 +69,7 @@ public class DbHandler extends SQLiteOpenHelper implements RefillsRepository {
 
         if (!c.moveToFirst()) {
             c.close();
+            db.close();
             return result;
         }
 
@@ -251,6 +252,7 @@ public class DbHandler extends SQLiteOpenHelper implements RefillsRepository {
 
         if (!c.moveToFirst()) {
             c.close();
+            db.close();
             return null;
         }
 

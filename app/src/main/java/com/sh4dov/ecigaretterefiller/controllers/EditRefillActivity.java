@@ -82,7 +82,7 @@ public class EditRefillActivity extends Activity {
 
         double size = editedRefill.size;
         int part1 = (int) Math.floor(size);
-        int part2 = (int) Math.floor((size - part1) * 10);
+        int part2 = (int) Math.floor((size * 10) - (part1 * 10));
         picker1.setValue(part1);
         picker2.setValue(part2);
 
