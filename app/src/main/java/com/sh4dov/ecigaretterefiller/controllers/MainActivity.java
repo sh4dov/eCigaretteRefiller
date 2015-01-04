@@ -1,19 +1,14 @@
 package com.sh4dov.ecigaretterefiller.controllers;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.util.concurrent.FutureTask;
-
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.ProgressDialog;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.support.v13.app.FragmentPagerAdapter;
 import android.os.Bundle;
+import android.support.v13.app.FragmentPagerAdapter;
 import android.support.v13.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.view.Menu;
@@ -24,9 +19,9 @@ import com.sh4dov.common.Notificator;
 import com.sh4dov.common.ProgressIndicator;
 import com.sh4dov.common.ProgressPointerIndicator;
 import com.sh4dov.common.TaskScheduler;
-import com.sh4dov.ecigaretterefiller.business.logic.AverageProvider;
 import com.sh4dov.ecigaretterefiller.FileDialog;
 import com.sh4dov.ecigaretterefiller.R;
+import com.sh4dov.ecigaretterefiller.business.logic.AverageProvider;
 import com.sh4dov.gdrive.GDriveBackup;
 import com.sh4dov.gdrive.GDriveBase;
 import com.sh4dov.gdrive.GDriveRestore;
@@ -34,6 +29,8 @@ import com.sh4dov.gdrive.GDriveWriteFile;
 import com.sh4dov.model.Refill;
 import com.sh4dov.repositories.DbHandler;
 import com.sh4dov.repositories.RefillsRepository;
+
+import java.io.File;
 
 
 public class MainActivity extends Activity
@@ -82,6 +79,13 @@ public class MainActivity extends Activity
         public static final int REQUEST_CODE_CREATOR = 3;
         public static final int RESOLVE_BACKUP_CONNECTION_REQUEST_CODE = 4;
         public static final int RESOLVE_RESTORE_CONNECTION_REQUEST_CODE = 5;
+    }
+
+    protected void onStop() {
+        super.onStop();
+        gdriveBackup.clean();
+        gDriveRestore.clean();
+        gDriveWriteFile.clean();
     }
 
     @Override
@@ -182,7 +186,7 @@ public class MainActivity extends Activity
         FragmentFactory fragmentFactory = new FragmentFactory(averageProvider);
         // Create the adapter that will return a fragment for each of the three
         // primary sections of the activity.
-        mSectionsPagerAdapter = new SectionsPagerAdapter(getFragmentManager(), fragmentFactory, db);
+        mSectionsPagerAdapter = new SectionsPagerAdapter(getFragmentManager(), fragmentFactory);
 
         // Set up the ViewPager with the sections adapter.
         mViewPager = (ViewPager) findViewById(R.id.pager);
@@ -310,12 +314,10 @@ public class MainActivity extends Activity
      */
     public class SectionsPagerAdapter extends FragmentStatePagerAdapter {
         private final FragmentFactory fragmentFactory;
-        private RefillsRepository db;
 
-        public SectionsPagerAdapter(FragmentManager fm, FragmentFactory fragmentFactory, RefillsRepository db) {
+        public SectionsPagerAdapter(FragmentManager fm, FragmentFactory fragmentFactory) {
             super(fm);
             this.fragmentFactory = fragmentFactory;
-            this.db = db;
         }
 
         @Override

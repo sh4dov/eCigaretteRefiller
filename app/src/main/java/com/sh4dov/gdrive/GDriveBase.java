@@ -59,7 +59,16 @@ public abstract class GDriveBase
         if(googleApiClient.isConnected()){
             googleApiClient.disconnect();
         }
-        googleApiClient.connect();
+        googleApiClient.reconnect();
+    }
+
+    public void clean(){
+        if(googleApiClient.isConnected()){
+            googleApiClient.disconnect();
+        }
+
+        googleApiClient.unregisterConnectionFailedListener(this);
+        googleApiClient.unregisterConnectionCallbacks(this);
     }
 
     protected abstract GoogleApiClient.Builder setup(GoogleApiClient.Builder builder);

@@ -1,8 +1,8 @@
 package com.sh4dov.ecigaretterefiller.controllers;
 
 import android.app.Activity;
-import android.os.Bundle;
 import android.app.Fragment;
+import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,7 +22,7 @@ public class NewRefillFragment extends Fragment {
 
     RefillRepository refillRepository;
 
-    public interface RefillRepository{
+    public interface RefillRepository {
         public void AddNew(Refill refill);
     }
 
@@ -31,44 +31,44 @@ public class NewRefillFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_new_refill, container, false);
-        ((Button)view.findViewById(R.id.new_refill_button)).setOnClickListener(new View.OnClickListener() {
+        ((Button) view.findViewById(R.id.new_refill_button)).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Refill refill = new Refill();
 
-                DatePicker datePicker = (DatePicker)getView().findViewById(R.id.datePicker);
+                DatePicker datePicker = (DatePicker) getView().findViewById(R.id.datePicker);
                 Calendar calendar = Calendar.getInstance();
                 calendar.set(datePicker.getYear(), datePicker.getMonth(), datePicker.getDayOfMonth());
                 refill.date = calendar.getTime();
 
-                NumberPicker numberPicker = (NumberPicker)getView().findViewById(R.id.liquid_size_part1);
+                NumberPicker numberPicker = (NumberPicker) getView().findViewById(R.id.liquid_size_part1);
                 int part1 = numberPicker.getValue();
-                numberPicker = (NumberPicker)getView().findViewById(R.id.liquid_size_part2);
+                numberPicker = (NumberPicker) getView().findViewById(R.id.liquid_size_part2);
                 int part2 = numberPicker.getValue();
-                refill.size = (double)part1 + ((double)part2 / 10);
+                refill.size = (double) part1 + ((double) part2 / 10);
 
-                EditText editText = (EditText)getView().findViewById(R.id.editText);
+                EditText editText = (EditText) getView().findViewById(R.id.editText);
                 refill.name = editText.getText().toString();
 
-                if(refill.size == 0.0 || refill.name.isEmpty()){
+                if (refill.size == 0.0 || refill.name.isEmpty()) {
                     return;
                 }
 
                 refillRepository.AddNew(refill);
             }
         });
-        
+
         return view;
     }
 
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
-        refillRepository = (RefillRepository)activity;
+        refillRepository = (RefillRepository) activity;
     }
 
     @Override
-    public void onStart(){
+    public void onStart() {
         NumberPicker picker1 = (NumberPicker) getView().findViewById(R.id.liquid_size_part1);
         picker1.setMaxValue(9);
         picker1.setMinValue(0);
@@ -77,15 +77,15 @@ public class NewRefillFragment extends Fragment {
         picker2.setMinValue(0);
 
         Bundle args = getArguments();
-        if(args != null){
+        if (args != null) {
             double size = args.getDouble(SizeKey);
-            int part1 = (int)Math.floor(size);
-            int part2 =  (int)Math.floor((size - part1)*10);
+            int part1 = (int) Math.floor(size);
+            int part2 = (int) Math.floor(size * 10 - part1 * 10);
             picker1.setValue(part1);
             picker2.setValue(part2);
 
             String name = args.getString(NameKey);
-            EditText editText = (EditText)getView().findViewById(R.id.editText);
+            EditText editText = (EditText) getView().findViewById(R.id.editText);
             editText.setText(name);
             editText.selectAll();
         }

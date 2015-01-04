@@ -92,7 +92,7 @@ public class DbHandler extends SQLiteOpenHelper implements RefillsRepository {
         } catch (ParseException e) {
             e.printStackTrace();
         }
-        r.size = c.getFloat(2);
+        r.size = c.getDouble(2);
         r.name = c.getString(3);
         return r;
     }
