@@ -59,7 +59,7 @@ public abstract class GDriveBase
         if(googleApiClient.isConnected()){
             googleApiClient.disconnect();
         }
-        googleApiClient.reconnect();
+        googleApiClient.connect();
     }
 
     public void clean(){
