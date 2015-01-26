@@ -22,4 +22,13 @@ dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     compile 'com.android.support:support-v13:21.0.3'
     compile 'com.google.android.gms:play-services:6.5.+'
+
+    compile 'com.google.api-client:google-api-client:1.19.1'
+    compile 'com.google.apis:google-api-services-drive:v2-rev155-1.19.1'
+    compile 'com.google.http-client:google-http-client:1.19.0'
+    compile 'com.google.oauth-client:google-oauth-client:1.19.0'
+    compile 'com.google.api-client:google-api-client-android:1.19.1'
+    compile 'com.google.http-client:google-http-client-gson:1.19.0'
+
+    compile files("libs/sh4dovgooglesupport.jar")
 }

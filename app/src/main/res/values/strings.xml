@@ -29,5 +29,6 @@
     <string name="import_from_gdrive">from GDrive</string>
     <string name="backup_gdrive">Backup in GDrive</string>
     <string name="restore_gdrive">Restore from GDrive</string>
+    <string name="backup_created">Backup created</string>
 
 </resources>

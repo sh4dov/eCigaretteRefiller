@@ -1,143 +1,175 @@
 package com.sh4dov.gdrive;
 
 import android.app.Activity;
-import android.os.Bundle;
-import android.os.ParcelFileDescriptor;
+import android.app.ProgressDialog;
 
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.PendingResult;
-import com.google.android.gms.common.api.ResultCallback;
-import com.google.android.gms.common.api.Status;
-import com.google.android.gms.drive.Drive;
-import com.google.android.gms.drive.DriveApi;
-import com.google.android.gms.drive.DriveContents;
-import com.google.android.gms.drive.DriveFile;
-import com.google.android.gms.drive.DriveFolder;
-import com.google.android.gms.drive.DriveId;
-import com.google.android.gms.drive.Metadata;
-import com.google.android.gms.drive.MetadataChangeSet;
-import com.sh4dov.common.Notificator;
+import com.google.api.services.drive.model.File;
+import com.google.api.services.drive.model.ParentReference;
+import com.sh4dov.common.ProgressIndicator;
+import com.sh4dov.common.ProgressPointerIndicator;
+import com.sh4dov.common.TaskScheduler;
+import com.sh4dov.ecigaretterefiller.R;
+import com.sh4dov.google.DriveService;
+import com.sh4dov.google.builders.FileBuilder;
+import com.sh4dov.google.listeners.FolderListener;
+import com.sh4dov.google.listeners.GetFilesListener;
+import com.sh4dov.google.listeners.OnFailedListener;
+import com.sh4dov.google.listeners.UploadFileListener;
+import com.sh4dov.google.utils.FileHelper;
+import com.sh4dov.repositories.DbHandler;
 
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
+import java.util.ArrayList;
+import java.util.List;
 
-/**
- * Created by sh4dov on 2014-12-17.
- */
-public class GDriveBackup extends GDriveBackupBase {
-    private String backup;
-    public GDriveBackup(Activity activity, int resolveConnectionRequestCode) {
-        super(activity, resolveConnectionRequestCode);
+
+public class GDriveBackup extends GDriveBase implements GetFilesListener {
+    File backup;
+    File backupRoot;
+    File refillerBackup = FileBuilder.createNewFile().setTitle(CarCostGDriveConst.BACKUP_NAME).build();
+    private Activity activity;
+
+    public GDriveBackup(DriveService driveService, Activity activity, final int reconnectRequestCode) {
+        super(driveService, activity, reconnectRequestCode);
+        this.activity = activity;
+        getProgressDialog().setCancelable(false);
     }
 
-    public void backup(String backup){
-        this.backup = backup;
-        connect();
+    public void backup(String accountName) {
+        getDriveService()
+                .setAccountName(accountName)
+                .setApplicationName(CarCostGDriveConst.APPLICATION_NAME);
+        backupOnGDrive();
     }
 
     @Override
-    protected ResultCallback<DriveApi.MetadataBufferResult> getChildrenRetrievedCallback() {
-        return childrenRetrievedCallback;
-    }
-
-    private com.google.android.gms.common.api.ResultCallback<com.google.android.gms.drive.DriveApi.MetadataBufferResult> childrenRetrievedCallback = new ResultCallback<DriveApi.MetadataBufferResult>() {
-        @Override
-        public void onResult(DriveApi.MetadataBufferResult result) {
-            if(!result.getStatus().isSuccess()){
-                onFail("Problem while connecting to GDrive.");
-                return;
-            }
-
-            for (Metadata metadata : result.getMetadataBuffer()) {
-                String title = metadata.getTitle();
-                if(title.equals(backupName)){
-                    Drive.DriveApi
-                            .getFile(getGoogleApiClient(), metadata.getDriveId())
-                            .open(getGoogleApiClient(), DriveFile.MODE_WRITE_ONLY, null)
-                            .setResultCallback(updateBackup);
-                    return;
-                }
-            }
-
-            createNewBackup();
+    public void onGetFiles(List<File> files) {
+        backupRoot = FileHelper.firstOrDefault(files, CarCostGDriveConst.BACKUP_ROOT_FOLDER_NAME, FileHelper.ROOT_ID);
+        if (backupRoot == null) {
+            createBackupRootFolder();
+            return;
         }
-    };
 
-    private void createNewBackup() {
-        Drive.DriveApi
-                .newDriveContents(getGoogleApiClient())
-                .setResultCallback(createNewBackup);
+        backup = FileHelper.firstOrDefault(files, CarCostGDriveConst.BACKUP_APP_FOLDER_NAME, backupRoot.getId());
+        if (backup == null) {
+            createBackupFolder();
+            return;
+        }
+
+        File refillerBackup = FileHelper.firstOrDefault(files, CarCostGDriveConst.BACKUP_NAME, backup.getId());
+        if (refillerBackup != null) {
+            this.refillerBackup = refillerBackup;
+        }
+
+        setBackupParentReference();
     }
 
-    private com.google.android.gms.common.api.ResultCallback<com.google.android.gms.drive.DriveApi.DriveContentsResult> createNewBackup = new ResultCallback<DriveApi.DriveContentsResult>() {
-        @Override
-        public void onResult(DriveApi.DriveContentsResult result) {
-            MetadataChangeSet changeSet = new MetadataChangeSet.Builder()
-                    .setTitle(backupName)
-                    .setMimeType("text/plain")
+    private void backupOnGDrive() {
+        getProgressDialog().show();
+        getProgressDialog().setMessage("connecting...");
+        getDriveService().getFiles("title contains 'backup'", this, this, this);
+    }
+
+    private void createBackup() {
+        exportToGDrive(refillerBackup, CarCostGDriveConst.BACKUP_NAME, null);
+    }
+
+    private void createBackupFolder() {
+        if (backup == null) {
+            getProgressDialog().setMessage("creating folder " + CarCostGDriveConst.BACKUP_APP_FOLDER_NAME);
+            backup = FileBuilder
+                    .createNewFolder()
+                    .setTitle(CarCostGDriveConst.BACKUP_APP_FOLDER_NAME)
                     .build();
-
-            DriveContents driveContents = updateBackup(result);
-
-            Drive.DriveApi
-                .getAppFolder(getGoogleApiClient())
-                .createFile(getGoogleApiClient(), changeSet, driveContents)
-                .setResultCallback(createdBackup);
+            ParentReference parentReference = new ParentReference();
+            parentReference.setId(backupRoot.getId());
+            ArrayList<ParentReference> parents = new ArrayList<ParentReference>();
+            parents.add(parentReference);
+            backup.setParents(parents);
+            getDriveService().uploadFolder(backup, new FolderListener() {
+                @Override
+                public void onUpdatedFolder(File file) {
+                    backup = file;
+                    setBackupParentReference();
+                }
+            }, this, this);
+        } else {
+            setBackupParentReference();
         }
-    };
-
-    private DriveContents updateBackup(DriveApi.DriveContentsResult result) {
-        if(!result.getStatus().isSuccess()){
-            onFail(result.getStatus().getStatusMessage());
-            return null;
-        }
-
-        DriveContents driveContents = result.getDriveContents();
-        ParcelFileDescriptor parcelFileDescriptor = driveContents.getParcelFileDescriptor();
-        FileOutputStream fileOutputStream = new FileOutputStream(parcelFileDescriptor.getFileDescriptor());
-        Writer writer = new OutputStreamWriter(fileOutputStream);
-        try {
-            writer.write(backup);
-            writer.flush();
-        } catch (IOException e) {
-            e.printStackTrace();
-            onFail(e.getMessage());
-        }
-        return driveContents;
     }
 
-    private com.google.android.gms.common.api.ResultCallback<com.google.android.gms.drive.DriveFolder.DriveFileResult> createdBackup = new ResultCallback<DriveFolder.DriveFileResult>() {
-        @Override
-        public void onResult(DriveFolder.DriveFileResult result) {
-            if(result.getStatus().isSuccess()){
-                onSuccess("Backup created.");
-            }
-            else{
-                onFail(result.getStatus().getStatusMessage());
-            }
+    private void createBackupRootFolder() {
+        if (backupRoot == null) {
+            getProgressDialog().setMessage("creating folder " + CarCostGDriveConst.BACKUP_ROOT_FOLDER_NAME);
+            backupRoot = FileBuilder
+                    .createNewFolder()
+                    .setTitle(CarCostGDriveConst.BACKUP_ROOT_FOLDER_NAME)
+                    .build();
+            getDriveService().uploadFolder(backupRoot, new FolderListener() {
+                @Override
+                public void onUpdatedFolder(File file) {
+                    backupRoot = file;
+                    createBackupFolder();
+                }
+            }, this, this);
+        } else {
+            createBackupFolder();
         }
-    };
+    }
 
-    public com.google.android.gms.common.api.ResultCallback<com.google.android.gms.common.api.Status> backupUpdates = new ResultCallback<Status>() {
-        @Override
-        public void onResult(Status status) {
-            if(status.isSuccess()){
-                onSuccess("Backup updated.");
-            }
-            else{
-                onFail(status.getStatusMessage());
-            }
-        }
-    };
+    private void exportToGDrive(final File file, final String backupName, final Runnable next) {
+        final String[] content = new String[1];
+        final ProgressPointerIndicator pointer = new ProgressPointerIndicator();
+        ProgressIndicator progressIndicator = new ProgressIndicator(activity, ProgressDialog.STYLE_HORIZONTAL, new TaskScheduler(activity)
+                .willExecute(new Runnable() {
+                    @Override
+                    public void run() {
+                        content[0] = new DbHandler(activity, getNotificator()).exportToString();
+                    }
+                })
+                .willExecuteOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (content[0] != null) {
+                            getProgressDialog().show();
+                            getProgressDialog().setMessage("backup to " + backupName);
+                            getDriveService().uploadFile(file, content[0].getBytes(), new UploadFileListener() {
+                                @Override
+                                public void onUploaded(File file) {
+                                    getNotificator().showInfo(activity.getText(R.string.backup_created) + ": " + backupName);
+                                    getProgressDialog().hide();
 
-    private com.google.android.gms.common.api.ResultCallback<com.google.android.gms.drive.DriveApi.DriveContentsResult> updateBackup = new ResultCallback<DriveApi.DriveContentsResult>() {
-        @Override
-        public void onResult(DriveApi.DriveContentsResult result) {
-            DriveContents driveContents = updateBackup(result);
-            driveContents.commit(getGoogleApiClient(), null)
-                    .setResultCallback(backupUpdates);
-        }
-    };
+                                    if (next != null) {
+                                        next.run();
+                                    }
+                                }
+
+                                @Override
+                                public void onProgress(File file, double v) {
+
+                                }
+                            }, new OnFailedListener() {
+                                @Override
+                                public void onFailed(Exception e) {
+                                    getProgressDialog().hide();
+                                    getNotificator().showInfo(e.getMessage());
+                                }
+                            }, null);
+                        }
+                    }
+                }));
+        pointer.setProgressPointer(progressIndicator);
+        progressIndicator.execute();
+    }
+
+    private void setBackupParentReference() {
+        ParentReference parentReference = new ParentReference();
+        parentReference.setId(backup.getId());
+        ArrayList<ParentReference> parentReferences = new ArrayList<ParentReference>();
+        parentReferences.add(parentReference);
+        refillerBackup.setParents(parentReferences);
+
+        getProgressDialog().hide();
+
+        createBackup();
+    }
 }

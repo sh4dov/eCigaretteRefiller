@@ -1,5 +1,6 @@
 package com.sh4dov.ecigaretterefiller.controllers;
 
+import android.accounts.AccountManager;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Fragment;
@@ -15,6 +16,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 
+import com.google.android.gms.common.AccountPicker;
+import com.sh4dov.common.FragmentOperator;
 import com.sh4dov.common.Notificator;
 import com.sh4dov.common.ProgressIndicator;
 import com.sh4dov.common.ProgressPointerIndicator;
@@ -25,7 +28,7 @@ import com.sh4dov.ecigaretterefiller.business.logic.AverageProvider;
 import com.sh4dov.gdrive.GDriveBackup;
 import com.sh4dov.gdrive.GDriveBase;
 import com.sh4dov.gdrive.GDriveRestore;
-import com.sh4dov.gdrive.GDriveWriteFile;
+import com.sh4dov.google.DriveService;
 import com.sh4dov.model.Refill;
 import com.sh4dov.repositories.DbHandler;
 import com.sh4dov.repositories.RefillsRepository;
@@ -34,7 +37,7 @@ import java.io.File;
 
 
 public class MainActivity extends Activity
-        implements NewRefillFragment.RefillRepository, ItemFragment.ItemOperations, Notificator {
+        implements NewRefillFragment.RefillRepository, ItemFragment.ItemOperations, Notificator, FragmentOperator {
 
     /**
      * The {@link android.support.v4.view.PagerAdapter} that will provide
@@ -49,95 +52,50 @@ public class MainActivity extends Activity
     /**
      * The {@link ViewPager} that will host the section contents.
      */
-    ViewPager mViewPager;
+    ViewPager viewPager;
 
     RefillsRepository db;
     FileDialog fileDialog;
-    private GDriveWriteFile gDriveWriteFile;
-    private GDriveBackup gdriveBackup;
-    private GDriveBase.GDriveListener notificatorListener = new GDriveBase.GDriveListener() {
-        @Override
-        public void onSuccess(String message) {
-            showInfo(message);
-        }
-
-        @Override
-        public void onFail(String message) {
-            showInfo(message);
-        }
-    };
+    private GDriveBackup gDriveBackup;
     private GDriveRestore gDriveRestore;
+
+    @Override
+    public void goToFragment(int fragmentId) {
+        viewPager.setCurrentItem(fragmentId);
+    }
+
+    @Override
+    public void reload() {
+        mSectionsPagerAdapter.notifyDataSetChanged();
+    }
+
 
     @Override
     public void showInfo(String message) {
         Toast.makeText(this, message, Toast.LENGTH_LONG).show();
     }
 
+    @Override
+    public void showInfo(int id) {
+        Toast.makeText(this, this.getText(id), Toast.LENGTH_LONG).show();
+    }
+
     private static class RequestCodes {
         public static final int EDIT = 1;
-        public static final int RESOLVE_CONNECTION_REQUEST_CODE = 2;
-        public static final int REQUEST_CODE_CREATOR = 3;
-        public static final int RESOLVE_BACKUP_CONNECTION_REQUEST_CODE = 4;
-        public static final int RESOLVE_RESTORE_CONNECTION_REQUEST_CODE = 5;
+        public static final int Backup = 2;
+        public static final int Restore = 3;
     }
 
     protected void onStop() {
         super.onStop();
-        gdriveBackup.clean();
-        gDriveRestore.clean();
-        gDriveWriteFile.clean();
+        gDriveBackup.close();
+        gDriveRestore.close();
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        gDriveWriteFile = new GDriveWriteFile(this, RequestCodes.RESOLVE_CONNECTION_REQUEST_CODE);
-        gDriveWriteFile.addListener(notificatorListener);
-        gdriveBackup = new GDriveBackup(this, RequestCodes.RESOLVE_BACKUP_CONNECTION_REQUEST_CODE);
-        gdriveBackup.addListener(notificatorListener);
-        gDriveRestore = new GDriveRestore(this, RequestCodes.RESOLVE_RESTORE_CONNECTION_REQUEST_CODE);
-        gDriveRestore.addListener(notificatorListener);
-        gDriveRestore.addListener(new GDriveRestore.RestoreListener() {
-            @Override
-            public void RestoreFrom(final String value) {
-                DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, final int which) {
-                        final ProgressPointerIndicator progressPointer = new ProgressPointerIndicator();
-                        ProgressIndicator progressIndicator = new ProgressIndicator(MainActivity.this, ProgressDialog.STYLE_HORIZONTAL, new TaskScheduler(MainActivity.this)
-                                .willExecute(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        switch (which) {
-                                            case DialogInterface.BUTTON_POSITIVE:
-                                                db.clear();
-                                                break;
-                                        }
-
-                                        db.importFrom(value, progressPointer);
-                                    }
-                                })
-                                .willExecuteOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        showInfo("Successfully restored.");
-                                        mSectionsPagerAdapter.notifyDataSetChanged();
-                                    }
-                                }));
-                        progressPointer.setProgressPointer(progressIndicator);
-                        progressIndicator.execute();
-                    }
-                };
-
-                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-                builder.setMessage("Delete data from database?")
-                        .setPositiveButton("Yes", dialogClickListener)
-                        .setNegativeButton("No", dialogClickListener)
-                        .show();
-            }
-        });
 
         fileDialog = new FileDialog(this, new File(".."));
         fileDialog.setFileEndsWith(".csv");
@@ -189,9 +147,13 @@ public class MainActivity extends Activity
         mSectionsPagerAdapter = new SectionsPagerAdapter(getFragmentManager(), fragmentFactory);
 
         // Set up the ViewPager with the sections adapter.
-        mViewPager = (ViewPager) findViewById(R.id.pager);
-        mViewPager.setAdapter(mSectionsPagerAdapter);
-        mViewPager.setCurrentItem(FragmentFactory.NewRefill);
+        viewPager = (ViewPager) findViewById(R.id.pager);
+        viewPager.setAdapter(mSectionsPagerAdapter);
+        viewPager.setCurrentItem(FragmentFactory.NewRefill);
+
+        DriveService driveService = GDriveBase.createService(this);
+        gDriveBackup = new GDriveBackup(driveService, this, RequestCodes.Backup);
+        gDriveRestore = new GDriveRestore(driveService, this, RequestCodes.Restore, this);
     }
 
 
@@ -225,20 +187,21 @@ public class MainActivity extends Activity
                 finish();
                 return true;
 
-            case R.id.action_export_gdrive:
-                gDriveWriteFile.writeFile(RequestCodes.REQUEST_CODE_CREATOR, db.exportToString());
-                return true;
-
             case R.id.action_backup_gdrive:
-                gdriveBackup.backup(db.exportToString());
+                choseAccount(RequestCodes.Backup);
                 return true;
 
             case R.id.action_restore_gdrive:
-                gDriveRestore.restore();
+                choseAccount(RequestCodes.Restore);
                 return true;
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private void choseAccount(int requestCode) {
+        Intent intent = AccountPicker.newChooseAccountIntent(null, null, new String[]{"com.google"}, true, null, null, null, null);
+        startActivityForResult(intent, requestCode);
     }
 
     private void exportToCsv() {
@@ -266,7 +229,7 @@ public class MainActivity extends Activity
     public void AddNew(Refill refill) {
         db.Add(refill);
         mSectionsPagerAdapter.notifyDataSetChanged();
-        mViewPager.setCurrentItem(FragmentFactory.Overview);
+        viewPager.setCurrentItem(FragmentFactory.Overview);
     }
 
     @Override
@@ -283,28 +246,19 @@ public class MainActivity extends Activity
                 mSectionsPagerAdapter.notifyDataSetChanged();
                 break;
 
-            case RequestCodes.RESOLVE_CONNECTION_REQUEST_CODE:
+            case RequestCodes.Backup:
                 if (resultCode == RESULT_OK) {
-                    gDriveWriteFile.connect();
+                    String accountName = data.getStringExtra(AccountManager.KEY_ACCOUNT_NAME);
+                    gDriveBackup.backup(accountName);
                 }
                 break;
 
-            case RequestCodes.RESOLVE_BACKUP_CONNECTION_REQUEST_CODE:
+            case RequestCodes.Restore:
                 if (resultCode == RESULT_OK) {
-                    gdriveBackup.connect();
+                    String accountName = data.getStringExtra(AccountManager.KEY_ACCOUNT_NAME);
+                    gDriveRestore.restore(accountName);
                 }
                 break;
-
-            case RequestCodes.RESOLVE_RESTORE_CONNECTION_REQUEST_CODE:
-                if (resultCode == RESULT_OK) {
-                    gDriveRestore.connect();
-                }
-                break;
-
-            case RequestCodes.REQUEST_CODE_CREATOR:
-                if (resultCode == RESULT_OK) {
-                    showInfo("Exported to GDrive");
-                }
         }
     }
 

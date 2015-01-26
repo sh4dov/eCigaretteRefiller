@@ -23,9 +23,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 
 
-/**
- * Created by SYSTEM on 2014-12-06.
- */
 public class DbHandler extends SQLiteOpenHelper implements RefillsRepository {
     public static final String DatabaseName = "ecigaretterefills.db";
 
@@ -105,10 +102,10 @@ public class DbHandler extends SQLiteOpenHelper implements RefillsRepository {
 
     @Override
     public String exportToString() {
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder builder = new StringBuilder();
         String newLine = "\r\n";
 
-        buffer.append(TextUtils.join(";", columns) + newLine);
+        builder.append(TextUtils.join(";", columns) + newLine);
 
         SQLiteDatabase db = this.getReadableDatabase();
 
@@ -116,21 +113,22 @@ public class DbHandler extends SQLiteOpenHelper implements RefillsRepository {
         if (!c.moveToFirst()) {
             c.close();
             db.close();
-            return buffer.toString();
+            return builder.toString();
         }
 
         do {
             for (int i = 0; i < c.getColumnCount(); i++) {
-                buffer.append(c.getString(i));
-                buffer.append(";");
+                String value = c.getString(i);
+                builder.append(value);
+                builder.append(";");
             }
-            buffer.append(newLine);
+            builder.append(newLine);
         }
         while (c.moveToNext());
         c.close();
         db.close();
 
-        return buffer.toString();
+        return builder.toString();
     }
 
     @Override
@@ -193,7 +191,7 @@ public class DbHandler extends SQLiteOpenHelper implements RefillsRepository {
         }
     }
 
-    private void importFrom(BufferedReader reader, ProgressPointer progressPointer) {
+    public void importFrom(BufferedReader reader, ProgressPointer progressPointer) {
         boolean isEmpty = getRefillsSize() == 0;
         SQLiteDatabase db = this.getWritableDatabase();
         try {

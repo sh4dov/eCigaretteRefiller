@@ -1,102 +1,59 @@
 package com.sh4dov.gdrive;
 
 import android.app.Activity;
-import android.content.IntentSender;
-import android.os.Bundle;
+import android.app.ProgressDialog;
 
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.GooglePlayServicesUtil;
-import com.google.android.gms.common.api.GoogleApiClient;
 import com.sh4dov.common.Notificator;
-import com.sh4dov.ecigaretterefiller.ListenerList;
+import com.sh4dov.common.ToastNotificator;
+import com.sh4dov.google.DriveService;
+import com.sh4dov.google.listeners.OnFailedListener;
+import com.sh4dov.google.listeners.UserRecoverableRequestCodeProvider;
 
-/**
- * Created by sh4dov on 2014-12-17.
- */
-public abstract class GDriveBase
-        implements GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener {
-    private final Activity activity;
-    private final int resolveConnectionRequestCode;
-    private final GoogleApiClient googleApiClient;
-    private ListenerList<GDriveListener> listeners = new ListenerList<GDriveListener>();
+public class GDriveBase implements UserRecoverableRequestCodeProvider, OnFailedListener {
+    private final DriveService driveService;
+    private final Notificator notificator;
+    private final ProgressDialog progressDialog;
+    private int reconnectRequestCode;
 
-    public interface GDriveListener{
-        void onSuccess(String message);
-        void onFail(String message);
+    public GDriveBase(DriveService driveService, Activity activity, int reconnectRequestCode) {
+        notificator = new ToastNotificator(activity);
+        this.reconnectRequestCode = reconnectRequestCode;
+        progressDialog = new ProgressDialog(activity);
+        this.driveService = driveService
+                .setUserRecoverableRequestCodeProvider(this);
     }
 
-    public void addListener(GDriveListener listener){listeners.add(listener);}
-
-    protected void onSuccess(final String message){
-        listeners.fireEvent(new ListenerList.FireHandler<GDriveListener>() {
-            @Override
-            public void fireEvent(GDriveListener listener) {
-                listener.onSuccess(message);
-            }
-        });
+    public static DriveService createService(Activity activity) {
+        return new DriveService(activity)
+                .addScope(DriveService.DRIVE);
     }
 
-    protected void onFail(final String message){
-        listeners.fireEvent(new ListenerList.FireHandler<GDriveListener>() {
-            @Override
-            public void fireEvent(GDriveListener listener) {
-                listener.onFail(message);
-            }
-        });
-    }
-
-    public GDriveBase(Activity activity, int resolveConnectionRequestCode){
-        this.activity = activity;
-        this.resolveConnectionRequestCode = resolveConnectionRequestCode;
-
-        googleApiClient = setup(new GoogleApiClient
-                .Builder(activity,this, this))
-                .build();
-    }
-
-    public void connect() {
-        if(googleApiClient.isConnected()){
-            googleApiClient.disconnect();
-        }
-        googleApiClient.connect();
-    }
-
-    public void clean(){
-        if(googleApiClient.isConnected()){
-            googleApiClient.disconnect();
-        }
-
-        googleApiClient.unregisterConnectionFailedListener(this);
-        googleApiClient.unregisterConnectionCallbacks(this);
-    }
-
-    protected abstract GoogleApiClient.Builder setup(GoogleApiClient.Builder builder);
-
-    protected GoogleApiClient getGoogleApiClient() {return googleApiClient;}
-
-    protected Activity getActivity(){return activity;}
-
-    @Override
-    public void onConnected(Bundle bundle) {
+    public void close() {
+        driveService.close();
+        progressDialog.hide();
+        progressDialog.dismiss();
     }
 
     @Override
-    public void onConnectionSuspended(int i) {
+    public int getRequestCode() {
+        return reconnectRequestCode;
     }
 
     @Override
-    public void onConnectionFailed(ConnectionResult connectionResult) {
-        if (connectionResult.hasResolution()) {
-            try {
-                connectionResult.startResolutionForResult(activity, resolveConnectionRequestCode);
-            } catch (IntentSender.SendIntentException e) {
-                onFail(e.getMessage());
-            }
-        } else {
-            GooglePlayServicesUtil
-                    .getErrorDialog(connectionResult.getErrorCode(), activity, 0)
-                    .show();
-        }
+    public void onFailed(Exception e) {
+        progressDialog.hide();
+        notificator.showInfo(e.getMessage());
+    }
+
+    protected DriveService getDriveService() {
+        return driveService;
+    }
+
+    protected Notificator getNotificator() {
+        return notificator;
+    }
+
+    protected ProgressDialog getProgressDialog() {
+        return progressDialog;
     }
 }

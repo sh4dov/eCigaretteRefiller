@@ -1,101 +1,134 @@
 package com.sh4dov.gdrive;
 
 import android.app.Activity;
-import android.os.ParcelFileDescriptor;
-import android.util.Log;
+import android.app.ProgressDialog;
 
-import com.google.android.gms.common.api.ResultCallback;
-import com.google.android.gms.common.api.Status;
-import com.google.android.gms.drive.Drive;
-import com.google.android.gms.drive.DriveApi;
-import com.google.android.gms.drive.DriveContents;
-import com.google.android.gms.drive.DriveFile;
-import com.google.android.gms.drive.Metadata;
-import com.sh4dov.ecigaretterefiller.ListenerList;
+import com.google.api.services.drive.model.File;
+import com.sh4dov.common.FragmentOperator;
+import com.sh4dov.common.ProgressIndicator;
+import com.sh4dov.common.ProgressPointerIndicator;
+import com.sh4dov.common.TaskScheduler;
+import com.sh4dov.google.DriveService;
+import com.sh4dov.google.builders.FileBuilder;
+import com.sh4dov.google.listeners.DownloadFileListener;
+import com.sh4dov.google.listeners.GetFilesListener;
+import com.sh4dov.google.utils.FileHelper;
+import com.sh4dov.repositories.DbHandler;
 
 import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.ByteArrayInputStream;
 import java.io.InputStreamReader;
+import java.io.Reader;
+import java.util.List;
 
-/**
- * Created by sh4dov on 2014-12-17.
- */
-public class GDriveRestore extends GDriveBackupBase {
-    private ListenerList<RestoreListener> listeners = new ListenerList<RestoreListener>();
+public class GDriveRestore extends GDriveBase implements GetFilesListener {
+    File refillerBackup = FileBuilder.createNewFile().setTitle(CarCostGDriveConst.BACKUP_NAME).build();
+    private Activity activity;
+    private FragmentOperator fragmentOperator;
 
-    public interface RestoreListener {
-        public void RestoreFrom(String value);
-    }
-
-    public void addListener(RestoreListener listener){listeners.add(listener);}
-
-    public GDriveRestore(Activity activity, int resolveConnectionRequestCode) {
-        super(activity, resolveConnectionRequestCode);
-    }
-
-    public void restore(){
-        connect();
-    }
-
-    private void onRestore(final String value){
-        listeners.fireEvent(new ListenerList.FireHandler<RestoreListener>() {
-            @Override
-            public void fireEvent(RestoreListener listener) {
-                listener.RestoreFrom(value);
-            }
-        });
+    public GDriveRestore(DriveService driveService, Activity activity, int reconnectRequestCode, FragmentOperator fragmentOperator) {
+        super(driveService, activity, reconnectRequestCode);
+        this.activity = activity;
+        this.fragmentOperator = fragmentOperator;
     }
 
     @Override
-    protected ResultCallback<DriveApi.MetadataBufferResult> getChildrenRetrievedCallback() {
-        return childrenRetrievedCallback;
+    public void onGetFiles(List<File> files) {
+        File backupRoot = FileHelper.firstOrDefault(files, CarCostGDriveConst.BACKUP_ROOT_FOLDER_NAME, FileHelper.ROOT_ID);
+        if (backupRoot == null) {
+            showThereIsNoBackup();
+            return;
+        }
+
+        File backup = FileHelper.firstOrDefault(files, CarCostGDriveConst.BACKUP_APP_FOLDER_NAME, backupRoot.getId());
+        if (backup == null) {
+            showThereIsNoBackup();
+            return;
+        }
+
+        refillerBackup = FileHelper.firstOrDefault(files, CarCostGDriveConst.BACKUP_NAME, backup.getId());
+
+        getProgressDialog().hide();
+
+        final Runnable reload = new Runnable() {
+            @Override
+            public void run() {
+                getProgressDialog().hide();
+                getNotificator().showInfo("Restored");
+                fragmentOperator.reload();
+            }
+        };
+
+
+        downloadFile(refillerBackup, CarCostGDriveConst.BACKUP_NAME, reload);
     }
 
-    private com.google.android.gms.common.api.ResultCallback<com.google.android.gms.drive.DriveApi.DriveContentsResult> readBackup = new ResultCallback<DriveApi.DriveContentsResult>() {
-        @Override
-        public void onResult(DriveApi.DriveContentsResult result) {
-            if(!result.getStatus().isSuccess()){
-                onFail(result.getStatus().getStatusMessage());
-                return;
-            }
+    public void restore(String accountName) {
+        getDriveService()
+                .setAccountName(accountName)
+                .setApplicationName(CarCostGDriveConst.APPLICATION_NAME);
+        restoreFromGDrive();
+    }
 
-            DriveContents driveContents = result.getDriveContents();
-            InputStream inputStream = driveContents.getInputStream();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-            String line;
-            StringBuilder builder = new StringBuilder();
-            try {
-                while((line = reader.readLine()) != null){
-                    builder.append(line + "\r\n");
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
+    private void downloadFile(File file, final String backupName, final Runnable next) {
+        if (file == null) {
+            if (next != null) {
+                next.run();
             }
-            String value = builder.toString();
-            onRestore(value);
+            return;
         }
-    };
-    private com.google.android.gms.common.api.ResultCallback<com.google.android.gms.drive.DriveApi.MetadataBufferResult> childrenRetrievedCallback = new ResultCallback<DriveApi.MetadataBufferResult>() {
-        @Override
-        public void onResult(DriveApi.MetadataBufferResult result) {
-            if(!result.getStatus().isSuccess()){
-                onFail("Problem while connecting to GDrive.");
-                return;
+
+        getProgressDialog().show();
+        getProgressDialog().setMessage("Downloading " + file.getTitle());
+        getDriveService().downloadFile(file, new DownloadFileListener() {
+            @Override
+            public void onDownloadedFile(File file, final byte[] bytes) {
+                getProgressDialog().hide();
+                restoreFromGDrive(new InputStreamReader(new ByteArrayInputStream(bytes)), backupName, next);
             }
 
-            for (Metadata metadata : result.getMetadataBuffer()) {
-                String title = metadata.getTitle();
-                if(title.equals(backupName)){
-                    Drive.DriveApi
-                            .getFile(getGoogleApiClient(), metadata.getDriveId())
-                            .open(getGoogleApiClient(), DriveFile.MODE_READ_ONLY, null)
-                            .setResultCallback(readBackup);
-                    return;
-                }
+            @Override
+            public void onProgress(File file, double v) {
             }
+        }, this, this);
+    }
 
-            onFail("There is no backup!");
-        }
-    };
+    private void restoreFromGDrive(final Reader reader, final String backupName, final Runnable next) {
+        final ProgressPointerIndicator pointer = new ProgressPointerIndicator();
+        ProgressIndicator progressIndicator = new ProgressIndicator(activity, ProgressDialog.STYLE_HORIZONTAL, new TaskScheduler(activity)
+                .willExecute(new Runnable() {
+                    @Override
+                    public void run() {
+                        BufferedReader bufferedReader = new BufferedReader(reader);
+
+                        DbHandler dbHandler = new DbHandler(activity, getNotificator());
+                        dbHandler.clear();
+                        dbHandler.importFrom(bufferedReader, pointer);
+                    }
+                })
+                .willExecuteOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        getNotificator().showInfo("restored from " + backupName);
+                        if (next != null) {
+                            next.run();
+                        }
+                    }
+                })
+        );
+        pointer.setProgressPointer(progressIndicator);
+        progressIndicator.execute();
+    }
+
+    private void restoreFromGDrive() {
+        getProgressDialog().show();
+        getProgressDialog().setMessage("connecting...");
+        getDriveService().getFiles("title contains 'backup'", this, this, this);
+    }
+
+    private void showThereIsNoBackup() {
+        getNotificator().showInfo("There is no backup");
+    }
+
+
 }
